@@ -95,14 +95,14 @@ func InitRouter(r *gin.Engine, ctx consolectx.Context) {
 		service.GET("/trace-dashboard", handler.GetGrafanaDashboard(ctx, handler.ServiceDimension, handler.TraceDashboard))
 	}
 
-	{
-		service := router.Group("/service")
-		service.GET("/distribution", handler.GetServiceTabDistribution(ctx))
-		service.GET("/search", handler.SearchServices(ctx))
-		service.GET("/graph", handler.GetServiceGraph(ctx))
-		service.GET("/detail", handler.GetServiceDetail(ctx))
-		service.GET("/interfaces", handler.GetServiceInterfaces(ctx))
-	}
+		{
+			service := router.Group("/service")
+			service.GET("/distribution", handler.GetServiceTabDistribution(ctx))
+			service.GET("/search", handler.SearchServices(ctx))
+			service.GET("/graph", handler.GetServiceGraph(ctx))
+			service.GET("/detail", handler.GetServiceDetail(ctx))
+			service.GET("/interfaces", handler.GetServiceInterfaces(ctx))
+		}
 
 	{
 		configuration := router.Group("/configurator")

@@ -32,9 +32,9 @@
       </a-card>
     </a-flex>
     <search-table :search-domain="searchDomain">
-      <template #bodyCell="{ column, text }">
+      <template #bodyCell="{ column, text, record }">
         <template v-if="column.dataIndex === 'serviceName'">
-          <a-button type="link" @click="viewDetail(text)">{{ text }}</a-button>
+          <a-button type="link" @click="viewDetail(record)">{{ text }}</a-button>
         </template>
       </template>
     </search-table>
@@ -58,6 +58,7 @@ import { queryMetrics } from '@/base/http/promQuery'
 import { promQueryList } from '@/utils/PromQueryUtil'
 import { isNumber } from 'lodash'
 import { bytesToHuman } from '@/utils/ByteUtil'
+import { buildServiceKey } from '../../services/serviceIdentity'
 
 const route = useRoute()
 const router = useRouter()
@@ -196,8 +197,11 @@ const searchDomain = reactive(
 )
 searchDomain.onSearch()
 
-const viewDetail = (serviceName: string) => {
-  router.push('/resources/services/distribution/' + serviceName)
+const viewDetail = (record: any) => {
+  const serviceKey = record.serviceKey || buildServiceKey(record.serviceName, record.version, record.group)
+  router.push({
+    path: '/resources/services/detail/' + serviceKey
+  })
 }
 
 provide(PROVIDE_INJECT_KEY.SEARCH_DOMAIN, searchDomain)

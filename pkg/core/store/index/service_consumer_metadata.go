@@ -23,6 +23,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/apache/dubbo-admin/pkg/common/bizerror"
+	"github.com/apache/dubbo-admin/pkg/common/constants"
 	meshresource "github.com/apache/dubbo-admin/pkg/core/resource/apis/mesh/v1alpha1"
 )
 
@@ -67,9 +68,10 @@ func byServiceConsumerServiceKey(obj interface{}) ([]string, error) {
 	if !ok {
 		return nil, bizerror.NewAssertionError(meshresource.ServiceConsumerMetadataKind, reflect.TypeOf(obj).Name())
 	}
-	if metadata.Spec == nil {
+	if metadata == nil || metadata.Spec == nil {
 		return []string{}, nil
 	}
-	serviceKey := metadata.Spec.ServiceName + ":" + metadata.Spec.Version + ":" + metadata.Spec.Group
-	return []string{serviceKey}, nil
+	return []string{
+		metadata.Spec.ServiceName + constants.ColonSeparator + metadata.Spec.Version + constants.ColonSeparator + metadata.Spec.Group,
+	}, nil
 }

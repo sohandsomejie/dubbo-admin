@@ -17,7 +17,7 @@
 <template>
   <!--      example like blow-->
   <div class="__container_ServiceTabHeaderSlot">
-    <span class="header-desc">{{ $t('serviceDomain.name') }}: {{ route.params?.pathId }}</span>
+    <span class="header-desc">{{ $t('serviceDomain.name') }}: {{ serviceIdentity.serviceKey }}</span>
     <!-- <a-select
       v-model:value="versionGroupSelect.versionGroupValue"
       :bordered="false"
@@ -31,10 +31,11 @@
 </template>
 
 <script setup lang="ts">
-import { inject } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { PROVIDE_INJECT_KEY } from '@/base/enums/ProvideInject'
+import { parseServiceKey } from '../serviceIdentity'
 const route = useRoute()
+const serviceIdentity = computed(() => parseServiceKey(route.params?.pathId))
 </script>
 <style lang="less" scoped>
 .__container_ServiceTabHeaderSlot {

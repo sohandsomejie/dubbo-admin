@@ -68,7 +68,7 @@ func (s *ServiceConsumerMetadataEventSubscriber) ProcessEvent(event events.Event
 		}
 		processErr = s.processUpsert(newObj)
 	case cache.Deleted:
-		logger.Warnf("ignored consumer metadata resource deleted event in ServiceConsumerMetadataEventSubscriber")
+		logger.Infof("consumer metadata deleted event received, no service resource to clean up")
 	}
 	if processErr != nil {
 		logger.Errorf("process consumer metadata resource event failed, cause: %s, event: %s", processErr.Error(), event.String())
@@ -86,23 +86,25 @@ func (s *ServiceConsumerMetadataEventSubscriber) processUpsert(r *meshresource.S
 		logger.Warnf("skip processing service consumer metadata event because spec.consumerAppName is blank, res:%s", r.String())
 		return nil
 	}
+
+	// upsert Application
 	_, exists, err := s.appStore.GetByKey(coremodel.BuildResourceKey(r.Mesh, r.Spec.ConsumerAppName))
 	if err != nil {
 		logger.Errorf("get application resource failed, appName: %s, mesh: %s, cause: %s",
 			r.Spec.ConsumerAppName, r.Mesh, err.Error())
 		return err
 	}
-	if exists {
+	if !exists {
+		appRes := meshresource.NewApplicationResourceWithAttributes(r.Spec.ConsumerAppName, r.Mesh)
+		appRes.Spec.Name = r.Spec.ConsumerAppName
+		if err := s.appStore.Add(appRes); err != nil {
+			logger.Errorf("add application resource failed, appName: %s, mesh: %s, cause: %s",
+				r.Spec.ConsumerAppName, r.Mesh, err.Error())
+			return err
+		}
+		s.emitter.Send(events.NewResourceChangedEvent(cache.Added, nil, appRes))
+	} else {
 		logger.Infof("application resource already exists, appName: %s, mesh: %s", r.Spec.ConsumerAppName, r.Mesh)
-		return nil
 	}
-	appRes := meshresource.NewApplicationResourceWithAttributes(r.Spec.ConsumerAppName, r.Mesh)
-	appRes.Spec.Name = r.Spec.ConsumerAppName
-	if err := s.appStore.Add(appRes); err != nil {
-		logger.Errorf("add application resource failed, appName: %s, mesh: %s, cause: %s",
-			r.Spec.ConsumerAppName, r.Mesh, err.Error())
-		return err
-	}
-	s.emitter.Send(events.NewResourceChangedEvent(cache.Added, nil, appRes))
 	return nil
 }

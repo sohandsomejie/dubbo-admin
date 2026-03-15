@@ -15,20 +15,38 @@
  * limitations under the License.
  */
 
-import Mock from 'mockjs'
-import devTool from '@/utils/DevToolUtil'
+export interface ServiceIdentity {
+  serviceKey: string
+  serviceName: string
+  version: string
+  group: string
+}
 
-Mock.mock(devTool.mockUrl('/mock/service/detail'), 'get', {
-  code: 200,
-  message: 'success',
-  data: {
-    data: {
-      serviceName: 'org.apache.dubbo.samples.UserService',
-      serviceKey: 'org.apache.dubbo.samples.UserService:1.0.0:group1',
-      version: '1.0.0',
-      group: 'group1',
-      providers: ['provider-app-1', 'provider-app-2'],
-      consumers: ['consumer-app-1']
+export function buildServiceKey(serviceName: string, version = '', group = ''): string {
+  return `${serviceName}:${version}:${group}`
+}
+
+export function parseServiceKey(pathId: unknown): ServiceIdentity {
+  const serviceKey = Array.isArray(pathId) ? String(pathId[0] || '') : String(pathId || '')
+  const segments = serviceKey.split(':')
+
+  if (segments.length < 3) {
+    return {
+      serviceKey,
+      serviceName: serviceKey,
+      version: '',
+      group: ''
     }
   }
-})
+
+  const group = segments.pop() || ''
+  const version = segments.pop() || ''
+  const serviceName = segments.join(':')
+
+  return {
+    serviceKey,
+    serviceName,
+    version,
+    group
+  }
+}

@@ -27,6 +27,7 @@ import { PROVIDE_INJECT_KEY } from '@/base/enums/ProvideInject'
 import { useRoute } from 'vue-router'
 import { getServiceMetricsDashboard } from '@/api/service/service'
 import type { GrafanaState } from '@/types/grafana'
+import { parseServiceKey } from '../serviceIdentity'
 
 const route = useRoute()
 
@@ -40,12 +41,15 @@ provide<GrafanaState>(
   reactive({
     api: getServiceMetricsDashboard,
     showIframe: false,
-    params: {
-      serviceName: route.params.pathId as string,
-      version: route.params.version as string | undefined,
-      group: route.params.group as string | undefined,
-      providerAppName: route.query.providerAppName as string | undefined
-    }
+    params: (() => {
+      const serviceIdentity = parseServiceKey(route.params.pathId)
+      return {
+        serviceName: serviceIdentity.serviceName,
+        version: serviceIdentity.version || undefined,
+        group: serviceIdentity.group || undefined,
+        providerAppName: route.query.providerAppName as string | undefined
+      }
+    })()
   })
 )
 </script>

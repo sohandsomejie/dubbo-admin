@@ -22,7 +22,7 @@
           <a-tooltip :title="text">
             <span
               class="app-link"
-              @click="viewDistribution(text, record.group, record.version, record.providerAppName)"
+              @click="viewDetail(record.serviceKey || buildServiceKey(text, record.version, record.group))"
             >
               <b>
                 <Icon
@@ -50,6 +50,7 @@ import { PRIMARY_COLOR } from '@/base/constants'
 import { Icon } from '@iconify/vue'
 import { queryMetrics } from '@/base/http/promQuery'
 import { promQueryList } from '@/utils/PromQueryUtil'
+import { buildServiceKey } from './serviceIdentity'
 
 let __null = PRIMARY_COLOR
 const router = useRouter()
@@ -72,11 +73,6 @@ const columns = [
     key: 'group',
     dataIndex: 'group'
   },
-  // {
-  //   title: 'provider',
-  //   key: 'provider',
-  //   dataIndex: 'providerAppName'
-  // },
   {
     title: 'avgQPS',
     key: 'avgQPS',
@@ -160,16 +156,10 @@ searchDomain.tableStyle = {
   scrollY: '367px'
 }
 
-const viewDistribution = (
-  serviceName: string,
-  group: string,
-  version: string,
-  providerAppName?: string
-) => {
+const viewDetail = (serviceKey: string) => {
   router.push({
-    name: 'distribution',
-    params: { pathId: serviceName, group, version },
-    query: providerAppName ? { providerAppName } : {}
+    name: 'detail',
+    params: { pathId: serviceKey }
   })
 }
 
@@ -177,7 +167,6 @@ provide(PROVIDE_INJECT_KEY.SEARCH_DOMAIN, searchDomain)
 watch(route, (a, b) => {
   searchDomain.queryForm['keywords'] = a.query['query']
   searchDomain.onSearch()
-  console.log(a)
 })
 </script>
 <style lang="less" scoped>

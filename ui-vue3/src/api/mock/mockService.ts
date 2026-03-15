@@ -77,64 +77,103 @@ Mock.mock(devTool.mockUrl('/service/graph'), 'get', () => {
   }
 })
 
-Mock.mock(devTool.mockUrl('/service/detail'), 'get', () => {
-  return {
-    code: 'Success',
-    message: 'success',
-    data: {
-      serviceName: 'org.apache.dubbo.samples.UserService',
-      serviceKey: 'org.apache.dubbo.samples.UserService:1.0.0:group1',
-      version: '1.0.0',
-      group: 'group1',
-      language: 'Java',
-      methods: ['getUserById', 'listUsers', 'createUser', 'updateUser', 'deleteUser']
-    }
-  }
-})
-
-Mock.mock(devTool.mockUrl('/service/search'), 'get', () => {
-  return {
-    code: 'Success',
-    message: 'success',
-    data: {
-      pageInfo: {
-        Total: 3,
-        NextOffset: '0'
+Mock.mock(devTool.mockUrl('/mock/service/search'), 'get', {
+  code: 200,
+  msg: 'success',
+  data: {
+    pageInfo: {
+      Total: 8,
+      NextOffset: '0'
+    },
+    list: [
+      {
+        serviceName: 'org.apache.dubbo.samples.UserService',
+        serviceKey: 'org.apache.dubbo.samples.UserService:1.0.0:group1',
+        version: '1.0.0',
+        group: 'group1',
+        providerCount: 3,
+        consumerCount: 2,
+        avgQPS: 6,
+        avgRT: '194ms',
+        requestTotal: 200
       },
-      list: [
-        {
-          serviceName: 'org.apache.dubbo.samples.UserService',
-          serviceKey: 'org.apache.dubbo.samples.UserService:1.0.0:group1',
-          version: '1.0.0',
-          group: 'group1'
-        },
-        {
-          serviceName: 'org.apache.dubbo.samples.OrderService',
-          serviceKey: 'org.apache.dubbo.samples.OrderService:1.0.0:group1',
-          version: '1.0.0',
-          group: 'group1'
-        },
-        {
-          serviceName: 'org.apache.dubbo.samples.PayService',
-          serviceKey: 'org.apache.dubbo.samples.PayService:2.0.0:',
-          version: '2.0.0',
-          group: ''
-        }
-      ]
-    }
-  }
-})
-
-Mock.mock(devTool.mockUrl('/mock/service/distribution'), 'get', () => {
-  return {
-    code: 200,
-    msg: 'success',
-    data: {
-      pageInfo: {
-        Total: 8,
-        NextOffset: '0'
+      {
+        serviceName: 'org.apache.dubbo.samples.UserService',
+        serviceKey: 'org.apache.dubbo.samples.UserService:1.0.0:',
+        version: '1.0.0',
+        group: '',
+        providerCount: 1,
+        consumerCount: 0,
+        avgQPS: 2,
+        avgRT: '210ms',
+        requestTotal: 50
       },
-      list: []
-    }
+      {
+        serviceName: 'org.apache.dubbo.samples.OrderService',
+        serviceKey: 'org.apache.dubbo.samples.OrderService:1.0.0:group1',
+        version: '1.0.0',
+        group: 'group1',
+        providerCount: 2,
+        consumerCount: 4,
+        avgQPS: 13,
+        avgRT: '189ms',
+        requestTotal: 164
+      },
+      {
+        serviceName: 'org.apache.dubbo.samples.DetailService',
+        serviceKey: 'org.apache.dubbo.samples.DetailService:1.0.0:group1',
+        version: '1.0.0',
+        group: 'group1',
+        providerCount: 5,
+        consumerCount: 1,
+        avgQPS: 0.5,
+        avgRT: '268ms',
+        requestTotal: 1324
+      },
+      {
+        serviceName: 'org.apache.dubbo.samples.PayService',
+        serviceKey: 'org.apache.dubbo.samples.PayService:1.0.0:group1',
+        version: '1.0.0',
+        group: 'group1',
+        providerCount: 2,
+        consumerCount: 3,
+        avgQPS: 9,
+        avgRT: '346ms',
+        requestTotal: 189
+      },
+      {
+        serviceName: 'org.apache.dubbo.samples.CommentService',
+        serviceKey: 'org.apache.dubbo.samples.CommentService:1.0.0:group1',
+        version: '1.0.0',
+        group: 'group1',
+        providerCount: 1,
+        consumerCount: 2,
+        avgQPS: 8,
+        avgRT: '936ms',
+        requestTotal: 200
+      },
+      {
+        serviceName: 'org.apache.dubbo.samples.RepayService',
+        serviceKey: 'org.apache.dubbo.samples.RepayService:1.0.0:group1',
+        version: '1.0.0',
+        group: 'group1',
+        providerCount: 4,
+        consumerCount: 1,
+        avgQPS: 17,
+        avgRT: '240ms',
+        requestTotal: 146
+      },
+      {
+        serviceName: 'org.apche.dubbo.samples.TransportService',
+        serviceKey: 'org.apche.dubbo.samples.TransportService:1.0.0:group1',
+        version: '1.0.0',
+        group: 'group1',
+        providerCount: 6,
+        consumerCount: 3,
+        avgQPS: 43,
+        avgRT: '89ms',
+        requestTotal: 367
+      }
+    ]
   }
 })

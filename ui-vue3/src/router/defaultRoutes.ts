@@ -271,7 +271,7 @@ export const routes: Readonly<RouteRecordType[]> = [
                 }
               },
               {
-                path: '/distribution/:pathId/:group?/:version?',
+                path: '/distribution/:pathId',
                 name: 'distribution',
                 component: () => import('../views/resources/services/tabs/distribution.vue'),
                 meta: {
@@ -280,15 +280,15 @@ export const routes: Readonly<RouteRecordType[]> = [
                 }
               },
 
-              // Temporarily hidden
-              // {
-              //   path: '/detail/:pathId',
-              //   name: 'detail',
-              //   component: () => import('../views/resources/services/tabs/detail.vue'),
-              //   meta: {
-              //     tab: true
-              //   }
-              // },
+              {
+                path: '/detail/:pathId',
+                name: 'detail',
+                component: () => import('../views/resources/services/tabs/detail.vue'),
+                meta: {
+                  tab: true,
+                  back: '/resources/services/list'
+                }
+              },
               // {
               //   path: '/debug/:pathId/:group?/:version?',
               //   name: 'debug',
@@ -299,7 +299,7 @@ export const routes: Readonly<RouteRecordType[]> = [
               //   }
               // },
               {
-                path: '/topology/:pathId/:group?/:version?',
+                path: '/topology/:pathId',
                 name: 'topology',
                 component: () => import('../views/resources/services/tabs/topology.vue'),
                 meta: {
@@ -309,7 +309,7 @@ export const routes: Readonly<RouteRecordType[]> = [
                 }
               },
               {
-                path: '/monitor/:pathId/:group?/:version?',
+                path: '/monitor/:pathId',
                 name: 'monitor',
                 component: () => import('../views/resources/services/tabs/monitor.vue'),
                 meta: {
@@ -318,7 +318,7 @@ export const routes: Readonly<RouteRecordType[]> = [
                 }
               },
               {
-                path: '/tracing/:pathId/:group?/:version?',
+                path: '/tracing/:pathId',
                 name: 'tracing',
                 component: () => import('../views/resources/services/tabs/tracing.vue'),
                 meta: {
@@ -327,7 +327,7 @@ export const routes: Readonly<RouteRecordType[]> = [
                 }
               },
               {
-                path: '/sceneConfig/:pathId/:group?/:version?',
+                path: '/sceneConfig/:pathId',
                 name: 'sceneConfig',
                 component: () => import('../views/resources/services/tabs/sceneConfig.vue'),
                 meta: {

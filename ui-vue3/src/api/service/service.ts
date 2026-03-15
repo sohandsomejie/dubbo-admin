@@ -120,9 +120,10 @@ export const updateServiceIntraRegionPriorityAPI = (data: any): Promise<any> => 
 
 // get paramRoute
 export const getParamRouteAPI = (params: {
-  serviceName: string | RouteParamValue[]
-  version: string | RouteParamValue[]
-  group: string | RouteParamValue[]
+  serviceKey?: string
+  serviceName?: string | RouteParamValue[]
+  version?: string | RouteParamValue[]
+  group?: string | RouteParamValue[]
 }): Promise<any> => {
   return request({
     url: '/service/config/argumentRoute',
@@ -133,7 +134,8 @@ export const getParamRouteAPI = (params: {
 
 //update paramRoute
 export const updateParamRouteAPI = (data: {
-  serviceName: string
+  serviceKey?: string
+  serviceName?: string
   group?: string
   version?: string
   routes: any

@@ -51,6 +51,26 @@ func SearchServices(ctx consolectx.Context) gin.HandlerFunc {
 	}
 }
 
+func GetServiceDetail(ctx consolectx.Context) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		req := model.BaseServiceReq{}
+		if err := req.Query(c); err != nil {
+			util.HandleArgumentError(c, err)
+			return
+		}
+		resp, err := service.GetServiceDetail(ctx, req)
+		if err != nil {
+			util.HandleServiceError(c, err)
+			return
+		}
+		if resp == nil {
+			util.HandleNotFoundError(c, req.ServiceKey())
+			return
+		}
+		c.JSON(http.StatusOK, model.NewSuccessResp(resp))
+	}
+}
+
 func GetServiceTabDistribution(ctx consolectx.Context) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		req := &model.ServiceTabDistributionReq{}

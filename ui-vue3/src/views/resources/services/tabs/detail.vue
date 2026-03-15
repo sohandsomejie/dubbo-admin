@@ -17,68 +17,59 @@
 <template>
   <div class="__container_services_tabs_detail">
     <a-card-grid>
-      <a-card title="生产者详情">
-        <a-flex>
-          <a-descriptions class="description-column" :column="1" layout="vertical">
-            <a-descriptions-item label="超时时间">
-              <p class="description-item-content">{{ serviceDetail.timeOut }}</p>
-            </a-descriptions-item>
-            <a-descriptions-item label="重试次数">
-              <p class="description-item-content">{{ serviceDetail.retry }}</p>
-            </a-descriptions-item>
-            <a-descriptions-item label="是否过时">
-              <p class="description-item-content">{{ serviceDetail.obsolete }}</p>
-            </a-descriptions-item>
-          </a-descriptions>
-          <a-descriptions class="description-column" :column="1" layout="vertical">
-            <a-descriptions-item label="RPC协议">
-              <p class="description-item-content">{{ serviceDetail.protocol }}</p>
-            </a-descriptions-item>
-            <a-descriptions-item label="延迟注册时间">
-              <p class="description-item-content">{{ serviceDetail.delay }}</p>
-            </a-descriptions-item>
-          </a-descriptions>
-        </a-flex>
+      <a-card title="服务详情">
+        <a-descriptions :column="1" layout="vertical">
+          <a-descriptions-item label="服务名称">
+            <p class="description-item-content">{{ serviceDetail.serviceName }}</p>
+          </a-descriptions-item>
+          <a-descriptions-item label="版本">
+            <p class="description-item-content">{{ serviceDetail.version }}</p>
+          </a-descriptions-item>
+          <a-descriptions-item label="分组">
+            <p class="description-item-content">{{ serviceDetail.group }}</p>
+          </a-descriptions-item>
+          <a-descriptions-item label="语言">
+            <p class="description-item-content">{{ serviceDetail.language }}</p>
+          </a-descriptions-item>
+        </a-descriptions>
       </a-card>
-      <a-card title="消费者详情" style="margin-top: 10px">
-        <a-flex>
-          <a-descriptions class="description-column" :column="1" layout="vertical">
-            <a-descriptions-item label="超时时间">
-              <p class="description-item-content">{{ serviceDetail.timeOut }}</p>
-            </a-descriptions-item>
-            <a-descriptions-item label="重试次数">
-              <p class="description-item-content">{{ serviceDetail.retry }}</p>
-            </a-descriptions-item>
-            <a-descriptions-item label="是否过时">
-              <p class="description-item-content">{{ serviceDetail.obsolete }}</p>
-            </a-descriptions-item>
-          </a-descriptions>
-          <a-descriptions class="description-column" :column="1" layout="vertical">
-            <a-descriptions-item label="RPC协议">
-              <p class="description-item-content">{{ serviceDetail.protocol }}</p>
-            </a-descriptions-item>
-            <a-descriptions-item label="延迟注册时间">
-              <p class="description-item-content">{{ serviceDetail.delay }}</p>
-            </a-descriptions-item>
-          </a-descriptions>
-        </a-flex>
+      <a-card title="方法列表" style="margin-top: 10px">
+        <a-list :data-source="serviceDetail.methods || []" size="small">
+          <template #renderItem="{ item }">
+            <a-list-item>{{ item }}</a-list-item>
+          </template>
+        </a-list>
       </a-card>
     </a-card-grid>
-    <a-flex> </a-flex>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { getServiceDetail } from '@/api/service/service'
+import { parseServiceKey } from '../serviceIdentity'
 
-const serviceDetail = ref({})
+const route = useRoute()
+
+const serviceDetail = ref<{
+  serviceName?: string
+  version?: string
+  group?: string
+  language?: string
+  methods?: string[]
+}>({})
+
 const onSearch = async () => {
-  const { data } = await getServiceDetail({})
+  const serviceIdentity = parseServiceKey(route.params.pathId)
+  const { data } = await getServiceDetail({
+    serviceKey: serviceIdentity.serviceKey
+  })
   serviceDetail.value = data.data
 }
 
 onSearch()
+watch(() => route.fullPath, onSearch)
 </script>
 
 <style lang="less" scoped>

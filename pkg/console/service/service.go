@@ -40,10 +40,15 @@ import (
 
 // GetServiceTabDistribution get service distribution
 func GetServiceTabDistribution(ctx consolectx.Context, req *model.ServiceTabDistributionReq) (*model.SearchPaginationResult, error) {
-	indexes := map[string]string{
-		index.ByServiceConsumerServiceName: req.ServiceName,
+	if req.ServiceKeyValue == "" && req.ServiceName == "" {
+		return nil, bizerror.New(bizerror.InvalidArgument, "service key is empty")
 	}
-	// for now, only support accurate name match
+	serviceKey := req.ServiceKey()
+
+	indexes := map[string]string{
+		index.ByServiceConsumerServiceKey: serviceKey,
+		index.ByMeshIndex:                 req.Mesh,
+	}
 	if strutil.IsNotBlank(req.Keywords) {
 		indexes[index.ByServiceConsumerAppName] = req.Keywords
 	}
@@ -53,12 +58,12 @@ func GetServiceTabDistribution(ctx consolectx.Context, req *model.ServiceTabDist
 		indexes,
 		req.PageReq)
 	if err != nil {
-		logger.Errorf("get service consumer %s failed, cause: %v", req.ServiceName, err)
+		logger.Errorf("get service consumer %s failed, cause: %v", serviceKey, err)
 		return nil, bizerror.New(bizerror.InternalError, "get service consumer failed, please try again")
 	}
-	if pageData.Data == nil || len(pageData.Data) == 0 {
+	if len(pageData.Data) == 0 {
 		return &model.SearchPaginationResult{
-			List: []*meshresource.ServiceConsumerMetadataResourceList{},
+			List: []model.ApplicationSearchResp{},
 			PageInfo: coremodel.Pagination{
 				Total:      0,
 				PageSize:   req.PageReq.PageSize,
@@ -94,24 +99,24 @@ func SearchServices(ctx consolectx.Context, req *model.ServiceSearchReq) (*model
 	if strutil.IsNotBlank(req.Keywords) {
 		return SearchServicesByKeywords(ctx, req)
 	}
-	pageData, err := manager.PageListByIndexes[*meshresource.ServiceProviderMetadataResource](
+	pageData, err := manager.PageListByIndexes[*meshresource.ServiceResource](
 		ctx.ResourceManager(),
-		meshresource.ServiceProviderMetadataKind,
+		meshresource.ServiceKind,
 		map[string]string{
 			index.ByMeshIndex: req.Mesh,
 		},
 		req.PageReq,
 	)
 	if err != nil {
-		logger.Errorf("get service provider failed, cause: %v", err)
+		logger.Errorf("get service failed, cause: %v", err)
 		return nil, err
 	}
 	if pageData.Data == nil || len(pageData.Data) == 0 {
 		return nil, nil
 	}
 	serviceSearchResps := slice.Map(pageData.Data,
-		func(_ int, item *meshresource.ServiceProviderMetadataResource) *model.ServiceSearchResp {
-			return ToServiceSearchRespByProvider(item)
+		func(_ int, item *meshresource.ServiceResource) *model.ServiceSearchResp {
+			return toServiceSearchResp(item)
 		})
 	return &model.SearchPaginationResult{
 		List:     serviceSearchResps,
@@ -121,12 +126,12 @@ func SearchServices(ctx consolectx.Context, req *model.ServiceSearchReq) (*model
 
 // SearchServicesByKeywords search services by keywords, for now only support accurate search
 func SearchServicesByKeywords(ctx consolectx.Context, req *model.ServiceSearchReq) (*model.SearchPaginationResult, error) {
-	pageData, err := manager.PageListByIndexes[*meshresource.ServiceProviderMetadataResource](
+	pageData, err := manager.PageListByIndexes[*meshresource.ServiceResource](
 		ctx.ResourceManager(),
-		meshresource.ServiceProviderMetadataKind,
+		meshresource.ServiceKind,
 		map[string]string{
-			index.ByMeshIndex:                  req.Mesh,
-			index.ByServiceProviderServiceName: req.Keywords,
+			index.ByMeshIndex:          req.Mesh,
+			index.ByServiceServiceName: req.Keywords,
 		},
 		req.PageReq,
 	)
@@ -134,8 +139,8 @@ func SearchServicesByKeywords(ctx consolectx.Context, req *model.ServiceSearchRe
 		return nil, err
 	}
 	searchRespList := slice.Map(pageData.Data,
-		func(_ int, item *meshresource.ServiceProviderMetadataResource) *model.ServiceSearchResp {
-			return ToServiceSearchRespByProvider(item)
+		func(_ int, item *meshresource.ServiceResource) *model.ServiceSearchResp {
+			return toServiceSearchResp(item)
 		})
 	return &model.SearchPaginationResult{
 		List:     searchRespList,
@@ -143,9 +148,19 @@ func SearchServicesByKeywords(ctx consolectx.Context, req *model.ServiceSearchRe
 	}, nil
 }
 
+func toServiceSearchResp(res *meshresource.ServiceResource) *model.ServiceSearchResp {
+	return &model.ServiceSearchResp{
+		ServiceName: res.Spec.Name,
+		ServiceKey:  model.BuildServiceKey(res.Spec.Name, res.Spec.Version, res.Spec.Group),
+		Group:       res.Spec.Group,
+		Version:     res.Spec.Version,
+	}
+}
+
 func ToServiceSearchRespByProvider(res *meshresource.ServiceProviderMetadataResource) *model.ServiceSearchResp {
 	return &model.ServiceSearchResp{
 		ServiceName:     res.Spec.ServiceName,
+		ServiceKey:      model.BuildServiceKey(res.Spec.ServiceName, res.Spec.Version, res.Spec.Group),
 		Group:           res.Spec.Group,
 		Version:         res.Spec.Version,
 		ProviderAppName: res.Spec.ProviderAppName,
@@ -155,10 +170,36 @@ func ToServiceSearchRespByProvider(res *meshresource.ServiceProviderMetadataReso
 func ToServiceSearchRespByConsumer(res *meshresource.ServiceConsumerMetadataResource) *model.ServiceSearchResp {
 	return &model.ServiceSearchResp{
 		ServiceName:     res.Spec.ServiceName,
+		ServiceKey:      model.BuildServiceKey(res.Spec.ServiceName, res.Spec.Version, res.Spec.Group),
 		Group:           res.Spec.Group,
 		Version:         res.Spec.Version,
 		ConsumerAppName: res.Spec.ConsumerAppName,
 	}
+}
+
+func GetServiceDetail(ctx consolectx.Context, req model.BaseServiceReq) (*model.ServiceDetailResp, error) {
+	key := coremodel.BuildResourceKey(req.Mesh, req.ServiceKey())
+	svcRes, exists, err := manager.GetByKey[*meshresource.ServiceResource](
+		ctx.ResourceManager(), meshresource.ServiceKind, key)
+	if err != nil {
+		logger.Errorf("get service detail failed, key: %s, cause: %v", key, err)
+		return nil, err
+	}
+	if !exists {
+		return nil, nil
+	}
+	methods := svcRes.Spec.Methods
+	if methods == nil {
+		methods = []string{}
+	}
+	return &model.ServiceDetailResp{
+		ServiceName: svcRes.Spec.Name,
+		ServiceKey:  req.ServiceKey(),
+		Version:     svcRes.Spec.Version,
+		Group:       svcRes.Spec.Group,
+		Language:    svcRes.Spec.Language,
+		Methods:     methods,
+	}, nil
 }
 
 func GetServiceTimeoutConfig(ctx consolectx.Context, req model.BaseServiceReq) (int32, error) {

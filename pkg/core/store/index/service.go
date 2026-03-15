@@ -15,20 +15,32 @@
  * limitations under the License.
  */
 
-import Mock from 'mockjs'
-import devTool from '@/utils/DevToolUtil'
+package index
 
-Mock.mock(devTool.mockUrl('/mock/service/detail'), 'get', {
-  code: 200,
-  message: 'success',
-  data: {
-    data: {
-      serviceName: 'org.apache.dubbo.samples.UserService',
-      serviceKey: 'org.apache.dubbo.samples.UserService:1.0.0:group1',
-      version: '1.0.0',
-      group: 'group1',
-      providers: ['provider-app-1', 'provider-app-2'],
-      consumers: ['consumer-app-1']
-    }
-  }
-})
+import (
+	"reflect"
+
+	"k8s.io/client-go/tools/cache"
+
+	"github.com/apache/dubbo-admin/pkg/common/bizerror"
+	meshresource "github.com/apache/dubbo-admin/pkg/core/resource/apis/mesh/v1alpha1"
+)
+
+const ByServiceServiceName = "idx_service_service_name"
+
+func init() {
+	RegisterIndexers(meshresource.ServiceKind, map[string]cache.IndexFunc{
+		ByServiceServiceName: byServiceServiceName,
+	})
+}
+
+func byServiceServiceName(obj interface{}) ([]string, error) {
+	svc, ok := obj.(*meshresource.ServiceResource)
+	if !ok {
+		return nil, bizerror.NewAssertionError(meshresource.ServiceKind, reflect.TypeOf(obj).Name())
+	}
+	if svc.Spec == nil {
+		return []string{}, nil
+	}
+	return []string{svc.Spec.Name}, nil
+}

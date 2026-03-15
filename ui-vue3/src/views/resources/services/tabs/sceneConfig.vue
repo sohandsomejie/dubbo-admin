@@ -98,8 +98,16 @@ import {
 } from '@/api/service/service'
 import { useRoute } from 'vue-router'
 import { HTTP_STATUS } from '@/base/http/constants'
+import { parseServiceKey } from '../serviceIdentity'
 
 const route = useRoute()
+
+const getCurrentServiceParams = () => {
+  const serviceIdentity = parseServiceKey(route.params.pathId)
+  return {
+    serviceKey: serviceIdentity.serviceKey
+  }
+}
 
 const options: any = reactive({
   list: [
@@ -160,7 +168,7 @@ const options: any = reactive({
       },
       submit: (form: any) => {
         return new Promise((resolve) => {
-          resolve(updateParamRoute(form?.paramRoute))
+          resolve(updateParamRoute())
         })
       },
       reset(form: any) {
@@ -204,13 +212,10 @@ const addParamRoute = () => {
 }
 
 const updateParamRoute = async () => {
-  const { pathId: serviceName, group, version } = route.params
   options.list.forEach(async (item: any) => {
     if (item.key === 'paramRoute') {
       await updateParamRouteAPI({
-        serviceName: serviceName,
-        group: group || '',
-        version: version || '',
+        ...getCurrentServiceParams(),
         routes: item.form.paramRoute
       })
       await getParamRoute()
@@ -226,12 +231,7 @@ const deleteParamRoute = (index: number) => {
 }
 
 const getParamRoute = async () => {
-  const { pathId: serviceName, group, version } = route.params
-  const params = {
-    serviceName,
-    group,
-    version
-  }
+  const params = getCurrentServiceParams()
   const res = await getParamRouteAPI(params)
   if (res.code === HTTP_STATUS.SUCCESS) {
     options.list.forEach((item: any) => {
@@ -244,12 +244,7 @@ const getParamRoute = async () => {
 
 // get timeout
 const getServiceTimeout = async () => {
-  const { pathId: serviceName, group, version } = route.params
-  const params = {
-    serviceName,
-    group: group || '',
-    version: version || ''
-  }
+  const params = getCurrentServiceParams()
   const res = await getServiceTimeoutAPI(params)
   options.list.forEach((item: any) => {
     if (item.key === 'timeout') {
@@ -260,11 +255,8 @@ const getServiceTimeout = async () => {
 
 // update timeout
 const updateServiceTimeout = async (timeout: number) => {
-  const { pathId: serviceName, group, version } = route.params
   const data = {
-    serviceName,
-    group: group || '',
-    version: version || '',
+    ...getCurrentServiceParams(),
     timeout
   }
   await updateServiceTimeoutAPI(data)
@@ -273,12 +265,7 @@ const updateServiceTimeout = async (timeout: number) => {
 
 // get service retry
 const getServiceRetry = async () => {
-  const { pathId: serviceName, group, version } = route.params
-  const params = {
-    serviceName,
-    group: group || '',
-    version: version || ''
-  }
+  const params = getCurrentServiceParams()
   const res = await getServiceRetryAPI(params)
   options.list.forEach((item: any) => {
     if (item.key === 'retryNum') {
@@ -289,11 +276,8 @@ const getServiceRetry = async () => {
 
 // update service retry
 const updateServiceRetry = async (retryTimes: number) => {
-  const { pathId: serviceName, group, version } = route.params
   const data = {
-    serviceName,
-    group: group || '',
-    version: version || '',
+    ...getCurrentServiceParams(),
     retryTimes
   }
   await updateServiceRetryAPI(data)
@@ -301,12 +285,7 @@ const updateServiceRetry = async (retryTimes: number) => {
 }
 
 const getServiceIntraRegionPriority = async () => {
-  const { pathId: serviceName, group, version } = route.params
-  const params = {
-    serviceName,
-    group: group || '',
-    version: version || ''
-  }
+  const params = getCurrentServiceParams()
   const res: any = await getServiceIntraRegionPriorityAPI(params)
   options.list.forEach((item: any) => {
     if (item.key === 'sameAreaFirst') {
@@ -316,11 +295,8 @@ const getServiceIntraRegionPriority = async () => {
 }
 
 const updateServiceIntraRegionPriority = async (enabled: boolean) => {
-  const { pathId: serviceName, group, version } = route.params
   const data = {
-    serviceName,
-    group: group || '',
-    version: version || '',
+    ...getCurrentServiceParams(),
     enabled
   }
   await updateServiceIntraRegionPriorityAPI(data)

@@ -61,6 +61,7 @@ import { Icon } from '@iconify/vue'
 import SearchTable from '@/components/SearchTable.vue'
 import { SearchDomain } from '@/utils/SearchUtil'
 import { PROVIDE_INJECT_KEY } from '@/base/enums/ProvideInject'
+import { parseServiceKey } from '../serviceIdentity'
 
 let __null = PRIMARY_COLOR
 const router = useRouter()
@@ -95,11 +96,13 @@ const tableColumns = [
 ]
 
 function getDistribution(params: any) {
+  const serviceIdentity = parseServiceKey(route.params?.pathId)
   return getServiceDistribution({
-    serviceName: route.params?.pathId,
+    serviceKey: serviceIdentity.serviceKey,
+    serviceName: serviceIdentity.serviceName,
+    version: serviceIdentity.version,
+    group: serviceIdentity.group,
     side: 'consumer',
-    version: route.params?.version || '',
-    group: route.params?.group || '',
     providerAppName: route.query?.providerAppName || '',
     ...params
   })

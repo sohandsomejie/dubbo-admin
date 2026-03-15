@@ -19,6 +19,7 @@ package model
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -45,10 +46,20 @@ func NewServiceSearchReq() *ServiceSearchReq {
 
 type ServiceSearchResp struct {
 	ServiceName     string `json:"serviceName"`
+	ServiceKey      string `json:"serviceKey"`
 	Version         string `json:"version"`
 	Group           string `json:"group"`
 	ProviderAppName string `json:"providerAppName,omitempty"`
 	ConsumerAppName string `json:"consumerAppName,omitempty"`
+}
+
+type ServiceDetailResp struct {
+	ServiceName string   `json:"serviceName"`
+	ServiceKey  string   `json:"serviceKey"`
+	Version     string   `json:"version"`
+	Group       string   `json:"group"`
+	Language    string   `json:"language"`
+	Methods     []string `json:"methods"`
 }
 
 type ByServiceName []*ServiceSearchResp
@@ -62,7 +73,8 @@ func (a ByServiceName) Less(i, j int) bool {
 func (a ByServiceName) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
 type ServiceTabDistributionReq struct {
-	ServiceName     string `json:"serviceName"  form:"serviceName" binding:"required"`
+	ServiceName     string `json:"serviceName"  form:"serviceName"`
+	ServiceKeyValue string `json:"serviceKey"  form:"serviceKey"`
 	Version         string `json:"version"  form:"version"`
 	Group           string `json:"group"  form:"group"`
 	Side            string `json:"side" form:"side"  binding:"required"`
@@ -70,6 +82,13 @@ type ServiceTabDistributionReq struct {
 	ProviderAppName string `json:"providerAppName"  form:"providerAppName"`
 	Keywords        string `json:"keywords"  form:"keywords"`
 	coremodel.PageReq
+}
+
+func (s *ServiceTabDistributionReq) ServiceKey() string {
+	if s.ServiceKeyValue != "" {
+		return s.ServiceKeyValue
+	}
+	return BuildServiceKey(s.ServiceName, s.Version, s.Group)
 }
 
 type ServiceTabDistributionResp struct {
@@ -100,25 +119,63 @@ type ServiceTabDistribution struct {
 }
 
 type BaseServiceReq struct {
-	ServiceName string `json:"serviceName"`
-	Group       string `json:"group"`
-	Version     string `json:"version"`
-	Mesh        string `json:"mesh"`
+	ServiceName     string `json:"serviceName" form:"serviceName"`
+	ServiceKeyValue string `json:"serviceKey" form:"serviceKey"`
+	Group           string `json:"group" form:"group"`
+	Version         string `json:"version" form:"version"`
+	Mesh            string `json:"mesh" form:"mesh"`
 }
 
 func (s *BaseServiceReq) Query(c *gin.Context) error {
+	s.ServiceKeyValue = c.Query("serviceKey")
 	s.ServiceName = c.Query("serviceName")
-	if s.ServiceName == "" {
-		return fmt.Errorf("service name is empty")
-	}
 	s.Group = c.Query("group")
 	s.Version = c.Query("version")
 	s.Mesh = c.Query("mesh")
+	return s.Normalize()
+}
+
+func (s *BaseServiceReq) Normalize() error {
+	if s.ServiceKeyValue != "" {
+		serviceName, version, group, err := ParseServiceKey(s.ServiceKeyValue)
+		if err != nil {
+			return err
+		}
+		s.ServiceName = serviceName
+		s.Version = version
+		s.Group = group
+		return nil
+	}
+	if s.ServiceName == "" {
+		return fmt.Errorf("service name is empty")
+	}
+	s.ServiceKeyValue = BuildServiceKey(s.ServiceName, s.Version, s.Group)
 	return nil
 }
 
 func (s *BaseServiceReq) ServiceKey() string {
-	return s.ServiceName + constants.ColonSeparator + s.Version + constants.ColonSeparator + s.Group
+	if s.ServiceKeyValue != "" {
+		return s.ServiceKeyValue
+	}
+	return BuildServiceKey(s.ServiceName, s.Version, s.Group)
+}
+
+func BuildServiceKey(serviceName, version, group string) string {
+	return serviceName + constants.ColonSeparator + version + constants.ColonSeparator + group
+}
+
+func ParseServiceKey(serviceKey string) (serviceName, version, group string, err error) {
+	parts := strings.Split(serviceKey, constants.ColonSeparator)
+	if len(parts) < 3 {
+		return "", "", "", fmt.Errorf("invalid service key: %s", serviceKey)
+	}
+	group = parts[len(parts)-1]
+	version = parts[len(parts)-2]
+	serviceName = strings.Join(parts[:len(parts)-2], constants.ColonSeparator)
+	if serviceName == "" {
+		return "", "", "", fmt.Errorf("invalid service key: %s", serviceKey)
+	}
+	return serviceName, version, group, nil
 }
 
 type ServiceDetailReq struct {
