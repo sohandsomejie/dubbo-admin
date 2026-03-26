@@ -69,45 +69,49 @@ type ServiceArgument struct {
 
 // ToExpression Convert ServiceArgument to expression string
 func (sa *ServiceArgument) ToExpression() string {
-	expression := "method=" + sa.Method
+	var expression strings.Builder
+	expression.WriteString("method=" + sa.Method)
 
 	// Add route conditions
 	for _, condition := range sa.Conditions {
-		expression += " & " + condition.string()
+		expression.WriteString(" & ")
+		expression.WriteString(condition.string())
 	}
 
 	// Add destinations if any
 	if len(sa.Destinations) > 0 {
-		expression += " => "
+		expression.WriteString(" => ")
 
 		// Process each destination
 		for destIdx, destination := range sa.Destinations {
 			for condIdx, condition := range destination.Conditions {
 				if destIdx > 0 || condIdx > 0 {
-					expression += " & "
+					expression.WriteString(" & ")
 				}
-				expression += condition.string()
+				expression.WriteString(condition.string())
 			}
 
 			// If there are multiple destinations, separate them (using comma as separator)
 			if destIdx < len(sa.Destinations)-1 {
-				expression += ", "
+				expression.WriteString(", ")
 			}
 		}
 	}
 
-	return expression
+	return expression.String()
 }
 
 func (sa *ServiceArgument) toFrom() *meshproto.ConditionRuleFrom {
-	res := "method=" + sa.Method
+	var res strings.Builder
+	res.WriteString("method=" + sa.Method)
 	if len(sa.Conditions) != 0 {
 		for i := 0; len(sa.Conditions) > i; i++ {
-			res += " & " + sa.Conditions[i].string()
+			res.WriteString(" & ")
+			res.WriteString(sa.Conditions[i].string())
 		}
 	}
 	return &meshproto.ConditionRuleFrom{
-		Match: res,
+		Match: res.String(),
 	}
 }
 
@@ -310,15 +314,12 @@ func parseFromPart(fromPart string) (string, []RouteCondition) {
 	conditions := []RouteCondition{}
 	method := ""
 
-	// Split conditions by "&"
-	subConditions := strings.Split(fromPart, "&")
-
-	for _, condition := range subConditions {
+	for condition := range strings.SplitSeq(fromPart, "&") {
 		condition = strings.TrimSpace(condition)
 
 		// Check if it's a method condition
-		if strings.HasPrefix(condition, "method=") {
-			method = strings.TrimPrefix(condition, "method=")
+		if trimmed, ok := strings.CutPrefix(condition, "method="); ok {
+			method = trimmed
 			method = strings.TrimSpace(method)
 		} else {
 			// Parse arguments condition

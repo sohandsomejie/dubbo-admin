@@ -18,8 +18,8 @@
 package model
 
 type MethodDetail struct {
-	InputT     []interface{} `json:"parameterTypes"`
-	ReturnType string        `json:"returnType"`
+	InputT     []any  `json:"parameterTypes"`
+	ReturnType string `json:"returnType"`
 }
 
 type MethodDescribe struct {
