@@ -174,25 +174,6 @@ func ParseServiceKey(serviceKey string) (serviceName, version, group string, err
 	return serviceName, version, group, nil
 }
 
-type ServiceDetailReq struct {
-	ServiceName string `form:"serviceName" json:"serviceName" binding:"required"`
-	Version     string `form:"version" json:"version"`
-	Group       string `form:"group" json:"group"`
-	Mesh        string `form:"mesh" json:"mesh" binding:"required"`
-}
-
-type VersionGroup struct {
-	Version string `json:"version"`
-	Group   string `json:"group"`
-}
-
-type ServiceDetailResp struct {
-	VersionGroups []*VersionGroup `json:"versionGroups"`
-	AvgRT         string          `json:"avgRT"`
-	AvgQPS        string          `json:"avgQPS"`
-	RequestTotal  string          `json:"requestTotal"`
-}
-
 type ServiceInterfacesReq struct {
 	ServiceName string `form:"serviceName" json:"serviceName" binding:"required"`
 	Mesh        string `form:"mesh" json:"mesh" binding:"required"`

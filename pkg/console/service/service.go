@@ -18,7 +18,6 @@
 package service
 
 import (
-	"encoding/json"
 	"strconv"
 	"strings"
 
@@ -671,65 +670,6 @@ func SearchServiceAsCrossLinkedList(ctx consolectx.Context, req *model.ServiceGr
 		Nodes: nodes,
 		Edges: edges,
 	}, nil
-}
-
-// GetServiceDetail get service detail information including version groups and metrics
-func GetServiceDetail(ctx consolectx.Context, req *model.ServiceDetailReq) (*model.ServiceDetailResp, error) {
-	// Query all service provider metadata resources for the given service name
-	indexes := map[string]string{
-		index.ByServiceProviderServiceName: req.ServiceName,
-	}
-	if strutil.IsNotBlank(req.Mesh) {
-		indexes[index.ByMeshIndex] = req.Mesh
-	}
-
-	serviceResources, err := manager.ListByIndexes[*meshresource.ServiceProviderMetadataResource](
-		ctx.ResourceManager(),
-		meshresource.ServiceProviderMetadataKind,
-		indexes,
-	)
-	byteJsonStr, err := json.Marshal(serviceResources)
-	logger.Infof("service resources for service %s: %s", req.ServiceName, string(byteJsonStr))
-	if err != nil {
-		logger.Errorf("get service provider metadata for %s failed, cause: %v", req.ServiceName, err)
-		return nil, bizerror.New(bizerror.InternalError, "get service provider failed")
-	}
-
-	if len(serviceResources) == 0 {
-		logger.Warnf("service %s not found", req.ServiceName)
-		return nil, bizerror.New(bizerror.NotFoundError, "service not found")
-	}
-
-	// Collect unique version and group combinations
-	versionGroupMap := make(map[string]*model.VersionGroup)
-	for _, res := range serviceResources {
-		if res.Spec == nil {
-			continue
-		}
-		key := res.Spec.Version + "|" + res.Spec.Group
-		if _, exists := versionGroupMap[key]; !exists {
-			versionGroupMap[key] = &model.VersionGroup{
-				Version: res.Spec.Version,
-				Group:   res.Spec.Group,
-			}
-		}
-	}
-
-	versionGroups := make([]*model.VersionGroup, 0)
-	for _, vg := range versionGroupMap {
-		versionGroups = append(versionGroups, vg)
-	}
-
-	// Return service detail response with mock metrics data
-	// In production, metrics would come from Prometheus or a metrics store
-	resp := &model.ServiceDetailResp{
-		VersionGroups: versionGroups,
-		AvgRT:         "96ms",
-		AvgQPS:        "12.5",
-		RequestTotal:  "1386",
-	}
-
-	return resp, nil
 }
 
 // GetServiceInterfaces get service interfaces
