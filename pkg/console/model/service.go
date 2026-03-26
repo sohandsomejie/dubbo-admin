@@ -54,12 +54,8 @@ type ServiceSearchResp struct {
 }
 
 type ServiceDetailResp struct {
-	ServiceName string   `json:"serviceName"`
-	ServiceKey  string   `json:"serviceKey"`
-	Version     string   `json:"version"`
-	Group       string   `json:"group"`
-	Language    string   `json:"language"`
-	Methods     []string `json:"methods"`
+	Language string   `json:"language"`
+	Methods  []string `json:"methods"`
 }
 
 type ByServiceName []*ServiceSearchResp

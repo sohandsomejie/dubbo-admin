@@ -78,12 +78,13 @@ Mock.mock(devTool.mockUrl('/service/graph'), 'get', () => {
 })
 
 Mock.mock(devTool.mockUrl('/mock/service/search'), 'get', {
-  code: 200,
-  msg: 'success',
+  code: 'Success',
+  message: 'success',
   data: {
     pageInfo: {
-      Total: 8,
-      NextOffset: '0'
+      total: 8,
+      pageSize: 15,
+      pageOffset: 0
     },
     list: [
       {

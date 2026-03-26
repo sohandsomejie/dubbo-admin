@@ -212,13 +212,22 @@ Mock.mock('/mock/application/event', 'get', () => {
 
 Mock.mock(devTool.mockUrl('/mock/application/service/form'), 'get', () => {
   return {
-    code: 200,
+    code: 'Success',
     message: 'success',
     data: {
-      list: [],
+      list: [
+        {
+          serviceName: 'org.apache.dubbo.samples.CommentService',
+          serviceKey: 'org.apache.dubbo.samples.CommentService:1.0.0:group1',
+          version: '1.0.0',
+          group: 'group1',
+          providerAppName: 'shop-comment'
+        }
+      ],
       pageInfo: {
-        Total: 0,
-        NextOffset: ''
+        total: 1,
+        pageSize: 15,
+        pageOffset: 0
       }
     }
   }

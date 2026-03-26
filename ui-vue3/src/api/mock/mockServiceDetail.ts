@@ -19,16 +19,10 @@ import Mock from 'mockjs'
 import devTool from '@/utils/DevToolUtil'
 
 Mock.mock(devTool.mockUrl('/mock/service/detail'), 'get', {
-  code: 200,
+  code: 'Success',
   message: 'success',
   data: {
-    data: {
-      serviceName: 'org.apache.dubbo.samples.UserService',
-      serviceKey: 'org.apache.dubbo.samples.UserService:1.0.0:group1',
-      version: '1.0.0',
-      group: 'group1',
-      providers: ['provider-app-1', 'provider-app-2'],
-      consumers: ['consumer-app-1']
-    }
+    language: 'Java',
+    methods: ['getUserById', 'listUsers', 'createUser', 'updateUser', 'deleteUser']
   }
 })

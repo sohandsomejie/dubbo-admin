@@ -193,12 +193,8 @@ func GetServiceDetail(ctx consolectx.Context, req model.BaseServiceReq) (*model.
 		methods = []string{}
 	}
 	return &model.ServiceDetailResp{
-		ServiceName: svcRes.Spec.Name,
-		ServiceKey:  req.ServiceKey(),
-		Version:     svcRes.Spec.Version,
-		Group:       svcRes.Spec.Group,
-		Language:    svcRes.Spec.Language,
-		Methods:     methods,
+		Language: svcRes.Spec.Language,
+		Methods:  methods,
 	}, nil
 }
 

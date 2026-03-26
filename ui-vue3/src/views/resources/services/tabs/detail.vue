@@ -20,13 +20,13 @@
       <a-card title="服务详情">
         <a-descriptions :column="1" layout="vertical">
           <a-descriptions-item label="服务名称">
-            <p class="description-item-content">{{ serviceDetail.serviceName }}</p>
+            <p class="description-item-content">{{ serviceIdentity.serviceName }}</p>
           </a-descriptions-item>
           <a-descriptions-item label="版本">
-            <p class="description-item-content">{{ serviceDetail.version }}</p>
+            <p class="description-item-content">{{ serviceIdentity.version }}</p>
           </a-descriptions-item>
           <a-descriptions-item label="分组">
-            <p class="description-item-content">{{ serviceDetail.group }}</p>
+            <p class="description-item-content">{{ serviceIdentity.group }}</p>
           </a-descriptions-item>
           <a-descriptions-item label="语言">
             <p class="description-item-content">{{ serviceDetail.language }}</p>
@@ -45,27 +45,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { getServiceDetail } from '@/api/service/service'
 import { parseServiceKey } from '../serviceIdentity'
 
 const route = useRoute()
+const serviceIdentity = computed(() => parseServiceKey(route.params.pathId))
 
 const serviceDetail = ref<{
-  serviceName?: string
-  version?: string
-  group?: string
   language?: string
   methods?: string[]
 }>({})
 
 const onSearch = async () => {
-  const serviceIdentity = parseServiceKey(route.params.pathId)
   const { data } = await getServiceDetail({
-    serviceKey: serviceIdentity.serviceKey
+    serviceKey: serviceIdentity.value.serviceKey
   })
-  serviceDetail.value = data.data
+  serviceDetail.value = data
 }
 
 onSearch()

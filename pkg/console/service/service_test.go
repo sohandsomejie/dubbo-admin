@@ -171,7 +171,6 @@ func TestGetServiceDetail_ReturnsLanguageAndMethods(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 
-	assert.Equal(t, model.BuildServiceKey("org.apache.dubbo.samples.UserService", "1.0.0", "gray"), resp.ServiceKey)
 	assert.Equal(t, "", resp.Language)
 	assert.Equal(t, []string{"getUserById", "listUsers"}, resp.Methods)
 }

@@ -3691,18 +3691,6 @@
     "model.ServiceDetailResp": {
       "type": "object",
       "properties": {
-        "serviceName": {
-          "type": "string"
-        },
-        "serviceKey": {
-          "type": "string"
-        },
-        "version": {
-          "type": "string"
-        },
-        "group": {
-          "type": "string"
-        },
         "language": {
           "type": "string"
         },
