@@ -74,6 +74,9 @@ func (s *InstanceEventSubscriber) ProcessEvent(event events.Event) error {
 		index.ByMeshIndex:            instanceRes.Mesh,
 		index.ByInstanceAppNameIndex: instanceRes.Spec.AppName,
 	})
+	if err != nil {
+		return err
+	}
 
 	appResKey := coremodel.BuildResourceKey(instanceRes.Mesh, instanceRes.Spec.AppName)
 	res, exists, err := s.appStore.GetByKey(appResKey)

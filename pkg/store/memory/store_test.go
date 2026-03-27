@@ -18,7 +18,7 @@
 package memory
 
 import (
-	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -69,11 +69,7 @@ func (mr *mockResource) ResourceSpec() model.ResourceSpec {
 }
 
 func (mr *mockResource) String() string {
-	b, err := json.Marshal(mr)
-	if err != nil {
-		return ""
-	}
-	return string(b)
+	return fmt.Sprintf("mockResource{%s}", mr.key)
 }
 
 func TestNewMemoryResourceStore(t *testing.T) {

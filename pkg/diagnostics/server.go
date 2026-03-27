@@ -86,8 +86,7 @@ func (s *diagnosticsServer) Start(_ runtime.Runtime, stop <-chan struct{}) error
 	errChan := make(chan error)
 	go func() {
 		defer close(errChan)
-		var err error
-		err = httpServer.ListenAndServe()
+		err := httpServer.ListenAndServe()
 		if err != nil {
 			switch {
 			case errors.Is(err, http.ErrServerClosed):

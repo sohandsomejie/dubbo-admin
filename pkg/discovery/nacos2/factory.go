@@ -53,6 +53,9 @@ func (f *Factory) Support(d discoverycfg.Type) bool {
 func (f *Factory) NewListWatchers(
 	cfg *discoverycfg.Config) ([]controller.ResourceListerWatcher, error) {
 	nacosConfigClient, nacosNamingClient, err := f.initNacosClients(cfg)
+	if err != nil {
+		return nil, err
+	}
 	listerWatchers, err := f.initListerWatchers(cfg, nacosConfigClient, nacosNamingClient)
 	if err != nil {
 		return nil, err

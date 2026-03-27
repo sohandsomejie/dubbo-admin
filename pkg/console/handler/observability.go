@@ -102,7 +102,6 @@ func GetPrometheus(ctx consolectx.Context) gin.HandlerFunc {
 		}
 		resp := ctx.Config().Observability.PrometheusBaseURL.String()
 		c.JSON(http.StatusOK, model.NewSuccessResp(resp))
-		return
 	}
 }
 

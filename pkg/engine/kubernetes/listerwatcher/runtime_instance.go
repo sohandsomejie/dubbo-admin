@@ -18,6 +18,7 @@
 package listerwatcher
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -44,39 +45,45 @@ import (
 
 type PodListerWatcher struct {
 	cfg *enginecfg.Config
-	lw  cache.ListerWatcher
+	lw  cache.ListerWatcherWithContext
 }
 
 var _ controller.ResourceListerWatcher = &PodListerWatcher{}
 
 func NewPodListWatcher(clientset *kubernetes.Clientset, cfg *enginecfg.Config) (*PodListerWatcher, error) {
-	var selector fields.Selector
 	s := cfg.Properties.PodWatchSelector
 	if strutil.IsBlank(s) {
-		selector = fields.Everything()
+		return &PodListerWatcher{
+			cfg: cfg,
+			lw: cache.ToListerWatcherWithContext(cache.NewListWatchFromClient(
+				clientset.CoreV1().RESTClient(),
+				"pods",
+				metav1.NamespaceAll,
+				fields.Everything(),
+			)),
+		}, nil
 	}
 	selector, err := fields.ParseSelector(s)
 	if err != nil {
 		return nil, fmt.Errorf("parse selector %s failed: %v", s, err)
 	}
-	lw := cache.NewListWatchFromClient(
-		clientset.CoreV1().RESTClient(),
-		"pods",
-		metav1.NamespaceAll,
-		selector,
-	)
 	return &PodListerWatcher{
 		cfg: cfg,
-		lw:  lw,
+		lw: cache.ToListerWatcherWithContext(cache.NewListWatchFromClient(
+			clientset.CoreV1().RESTClient(),
+			"pods",
+			metav1.NamespaceAll,
+			selector,
+		)),
 	}, nil
 }
 
 func (p *PodListerWatcher) List(options metav1.ListOptions) (k8sruntime.Object, error) {
-	return p.lw.List(options)
+	return p.lw.ListWithContext(context.Background(), options)
 }
 
 func (p *PodListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
-	return p.lw.Watch(options)
+	return p.lw.WatchWithContext(context.Background(), options)
 }
 
 func (p *PodListerWatcher) ResourceKind() coremodel.ResourceKind {

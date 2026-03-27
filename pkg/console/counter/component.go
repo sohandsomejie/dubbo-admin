@@ -101,8 +101,8 @@ func (c *managerComponent) initializeCountsFromStore(storeRouter store.Router) e
 		return fmt.Errorf("failed to initialize application count: %w", err)
 	}
 
-	if err := c.initializeResourceCount(storeRouter, meshresource.ServiceProviderMetadataKind); err != nil {
-		return fmt.Errorf("failed to initialize service provider metadata count: %w", err)
+	if err := c.initializeResourceCount(storeRouter, meshresource.ServiceKind); err != nil {
+		return fmt.Errorf("failed to initialize service count: %w", err)
 	}
 
 	return nil

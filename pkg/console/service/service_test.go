@@ -25,6 +25,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/apache/dubbo-admin/pkg/common/constants"
 	"github.com/apache/dubbo-admin/pkg/config/app"
 	discoverycfg "github.com/apache/dubbo-admin/pkg/config/discovery"
 	consolectx "github.com/apache/dubbo-admin/pkg/console/context"
@@ -112,10 +113,11 @@ func newServiceResource(mesh, serviceName, version, group string, methods []stri
 	return res
 }
 
-func newApplicationResource(mesh, appName string, instanceCount int64) *meshresource.ApplicationResource {
-	res := meshresource.NewApplicationResourceWithAttributes(appName, mesh)
-	res.Spec.Name = appName
-	res.Spec.InstanceCount = instanceCount
+func newServiceResourceForApp(mesh, appName, serviceName, version, group string, methods []string) *meshresource.ServiceResource {
+	res := newServiceResource(mesh, serviceName, version, group, methods)
+	res.Annotations = map[string]string{
+		"dubbo.apache.org/provider-apps": appName,
+	}
 	return res
 }
 
@@ -173,4 +175,31 @@ func TestGetServiceDetail_ReturnsLanguageAndMethods(t *testing.T) {
 
 	assert.Equal(t, "", resp.Language)
 	assert.Equal(t, []string{"getUserById", "listUsers"}, resp.Methods)
+}
+
+func TestGetAppServiceInfo_ProvideSideQueriesServiceProjection(t *testing.T) {
+	consoleCtx, _, serviceStore := newTestConsoleContext(t)
+	const mesh = "test-mesh"
+
+	require.NoError(t, serviceStore.Add(newServiceResourceForApp(mesh,
+		"shopping-cart", "org.apache.dubbo.samples.UserService", "1.0.0", "gray",
+		[]string{"getUserById"})))
+	require.NoError(t, serviceStore.Add(newServiceResourceForApp(mesh,
+		"order-center", "org.apache.dubbo.samples.OrderService", "1.0.0", "gray",
+		[]string{"createOrder"})))
+
+	resp, err := GetAppServiceInfo(consoleCtx, &model.ApplicationServiceFormReq{
+		AppName: "shopping-cart",
+		Side:    constants.ProviderSide,
+		Mesh:    mesh,
+		PageReq: coremodel.PageReq{PageOffset: 0, PageSize: 10},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	list, ok := resp.List.([]*model.ServiceSearchResp)
+	require.True(t, ok)
+	require.Len(t, list, 1)
+	assert.Equal(t, "org.apache.dubbo.samples.UserService", list[0].ServiceName)
+	assert.Equal(t, model.BuildServiceKey("org.apache.dubbo.samples.UserService", "1.0.0", "gray"), list[0].ServiceKey)
 }

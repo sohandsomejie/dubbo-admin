@@ -65,8 +65,8 @@ func GetServiceTabDistribution(ctx consolectx.Context, req *model.ServiceTabDist
 			List: []model.ApplicationSearchResp{},
 			PageInfo: coremodel.Pagination{
 				Total:      0,
-				PageSize:   req.PageReq.PageSize,
-				PageOffset: req.PageReq.PageOffset,
+				PageSize:   req.PageSize,
+				PageOffset: req.PageOffset,
 			},
 		}, nil
 	}
@@ -110,7 +110,7 @@ func SearchServices(ctx consolectx.Context, req *model.ServiceSearchReq) (*model
 		logger.Errorf("get service failed, cause: %v", err)
 		return nil, err
 	}
-	if pageData.Data == nil || len(pageData.Data) == 0 {
+	if len(pageData.Data) == 0 {
 		return nil, nil
 	}
 	serviceSearchResps := slice.Map(pageData.Data,
@@ -158,11 +158,10 @@ func toServiceSearchResp(res *meshresource.ServiceResource) *model.ServiceSearch
 
 func ToServiceSearchRespByProvider(res *meshresource.ServiceProviderMetadataResource) *model.ServiceSearchResp {
 	return &model.ServiceSearchResp{
-		ServiceName:     res.Spec.ServiceName,
-		ServiceKey:      model.BuildServiceKey(res.Spec.ServiceName, res.Spec.Version, res.Spec.Group),
-		Group:           res.Spec.Group,
-		Version:         res.Spec.Version,
-		ProviderAppName: res.Spec.ProviderAppName,
+		ServiceName: res.Spec.ServiceName,
+		ServiceKey:  model.BuildServiceKey(res.Spec.ServiceName, res.Spec.Version, res.Spec.Group),
+		Group:       res.Spec.Group,
+		Version:     res.Spec.Version,
 	}
 }
 
@@ -554,10 +553,7 @@ func UpInsertServiceArgumentRouteConfig(ctx consolectx.Context, req model.BaseSe
 
 // isArgumentRoute judge whether the condition is argument route
 func isArgumentRoute(condition string) bool {
-	if strings.Contains(condition, "method") {
-		return true
-	}
-	return false
+	return strings.Contains(condition, "method")
 }
 
 // SearchServiceAsCrossLinkedList builds a service dependency graph.

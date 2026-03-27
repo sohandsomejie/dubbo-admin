@@ -91,7 +91,9 @@ func Init(cfg *logcfg.Config) {
 	combinedCore := zapcore.NewTee(cores...)
 
 	logger = zap.New(combinedCore, zap.AddCaller(), zap.AddCallerSkip(2))
-	defer logger.Sync() // flushes buffer, if any
+	defer func() {
+		_ = logger.Sync()
+	}() // flushes buffer, if any
 	sugar = logger.Sugar()
 
 	// Create a separate logger for gRPC with higher log level to suppress INFO logs

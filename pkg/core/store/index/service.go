@@ -19,6 +19,7 @@ package index
 
 import (
 	"reflect"
+	"strings"
 
 	"k8s.io/client-go/tools/cache"
 
@@ -27,10 +28,12 @@ import (
 )
 
 const ByServiceServiceName = "idx_service_service_name"
+const serviceProviderAppsAnnotation = "dubbo.apache.org/provider-apps"
 
 func init() {
 	RegisterIndexers(meshresource.ServiceKind, map[string]cache.IndexFunc{
-		ByServiceServiceName: byServiceServiceName,
+		ByServiceServiceName:     byServiceServiceName,
+		ByServiceProviderAppName: byProjectedServiceProviderAppName,
 	})
 }
 
@@ -43,4 +46,19 @@ func byServiceServiceName(obj interface{}) ([]string, error) {
 		return []string{}, nil
 	}
 	return []string{svc.Spec.Name}, nil
+}
+
+func byProjectedServiceProviderAppName(obj interface{}) ([]string, error) {
+	svc, ok := obj.(*meshresource.ServiceResource)
+	if !ok {
+		return nil, bizerror.NewAssertionError(meshresource.ServiceKind, reflect.TypeOf(obj).Name())
+	}
+	if svc.Annotations == nil {
+		return []string{}, nil
+	}
+	apps := svc.Annotations[serviceProviderAppsAnnotation]
+	if apps == "" {
+		return []string{}, nil
+	}
+	return strings.Split(apps, ","), nil
 }

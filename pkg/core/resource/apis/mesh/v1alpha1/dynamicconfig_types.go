@@ -85,7 +85,7 @@ func (r *DynamicConfigResource) DeepCopyObject() k8sruntime.Object {
 		Status:   r.Status,
 	}
 
-	r.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
+	r.DeepCopyInto(&out.ObjectMeta)
 
 	if r.Spec != nil {
 		spec, ok := proto.Clone(r.Spec).(*meshproto.DynamicConfig)
@@ -143,7 +143,7 @@ func (r *DynamicConfigResourceList) DeepCopyObject() k8sruntime.Object {
 	out := &DynamicConfigResourceList{
 		TypeMeta: r.TypeMeta,
 	}
-	r.ListMeta.DeepCopyInto(&out.ListMeta)
+	r.DeepCopyInto(&out.ListMeta)
 
 	if len(r.Items) == 0 {
 		return out

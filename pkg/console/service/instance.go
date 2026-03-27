@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/duke-git/lancet/v2/convertor"
@@ -52,13 +53,13 @@ func SearchInstanceByIp(ctx consolectx.Context, req *model.SearchReq) (*model.Se
 	if err != nil {
 		return nil, err
 	}
-	if pageData.Data == nil || len(pageData.Data) == 0 {
+	if len(pageData.Data) == 0 {
 		return &model.SearchPaginationResult{
 			List: []*meshresource.ServiceProviderMetadataResourceList{},
 			PageInfo: coremodel.Pagination{
 				Total:      0,
-				PageSize:   req.PageReq.PageSize,
-				PageOffset: req.PageReq.PageOffset,
+				PageSize:   req.PageSize,
+				PageOffset: req.PageOffset,
 			},
 		}, nil
 	}
@@ -83,13 +84,13 @@ func SearchInstanceByName(ctx consolectx.Context, req *model.SearchReq) (*model.
 	if err != nil {
 		return nil, err
 	}
-	if pageData.Data == nil || len(pageData.Data) == 0 {
+	if len(pageData.Data) == 0 {
 		return &model.SearchPaginationResult{
 			List: []*meshresource.ServiceProviderMetadataResourceList{},
 			PageInfo: coremodel.Pagination{
 				Total:      0,
-				PageSize:   req.PageReq.PageSize,
-				PageOffset: req.PageReq.PageOffset,
+				PageSize:   req.PageSize,
+				PageOffset: req.PageOffset,
 			},
 		}, nil
 	}
@@ -300,10 +301,7 @@ func isInstanceTrafficDisabled(condition string, targetIP string) bool {
 		return false
 	}
 	targetExpression := "host!=" + targetIP
-	if targetExpression != toCondition {
-		return false
-	}
-	return true
+	return targetExpression == toCondition
 }
 
 func GetInstanceAccessLogOpenStatus(ctx consolectx.Context, mesh string, applicationName string, instanceIP string) (bool, error) {
@@ -439,7 +437,9 @@ func fetchMetricsData(ip string, port int64) ([]model.Metric, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer response.Body.Close()
+	defer func() {
+		_ = response.Body.Close()
+	}()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -490,8 +490,10 @@ func parsePrometheusData(data string) ([]model.Metric, error) {
 		}
 
 		// Parse the value
-		var value float64
-		fmt.Sscanf(valuePart, "%f", &value)
+		value, err := strconv.ParseFloat(valuePart, 64)
+		if err != nil {
+			value = 0
+		}
 
 		metrics = append(metrics, model.Metric{
 			Name:   name,

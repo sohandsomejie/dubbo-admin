@@ -116,32 +116,32 @@ func (c AdminConfig) PostProcess() error {
 }
 
 func (c AdminConfig) Validate() error {
-	if c.Log == nil {
-		c.Log = log.DefaultLogConfig()
-	} else if err := c.Log.Validate(); err != nil {
-		return bizerror.Wrap(err, bizerror.ConfigError, "log config validation failed")
+	if c.Log != nil {
+		if err := c.Log.Validate(); err != nil {
+			return bizerror.Wrap(err, bizerror.ConfigError, "log config validation failed")
+		}
 	}
-	if c.Store == nil {
-		c.Store = store.DefaultStoreConfig()
-	} else if err := c.Store.Validate(); err != nil {
-		return bizerror.Wrap(err, bizerror.ConfigError, "store config validation failed")
+	if c.Store != nil {
+		if err := c.Store.Validate(); err != nil {
+			return bizerror.Wrap(err, bizerror.ConfigError, "store config validation failed")
+		}
 	}
-	if c.Diagnostics == nil {
-		c.Diagnostics = diagnostics.DefaultDiagnosticsConfig()
-	} else if err := c.Diagnostics.Validate(); err != nil {
-		return bizerror.Wrap(err, bizerror.ConfigError, "diagnostics config validation failed")
+	if c.Diagnostics != nil {
+		if err := c.Diagnostics.Validate(); err != nil {
+			return bizerror.Wrap(err, bizerror.ConfigError, "diagnostics config validation failed")
+		}
 	}
-	if c.Console == nil {
-		c.Console = console.DefaultConsoleConfig()
-	} else if err := c.Console.Validate(); err != nil {
-		return bizerror.Wrap(err, bizerror.ConfigError, "console config validation failed")
+	if c.Console != nil {
+		if err := c.Console.Validate(); err != nil {
+			return bizerror.Wrap(err, bizerror.ConfigError, "console config validation failed")
+		}
 	}
-	if c.Observability == nil {
-		c.Observability = observability.DefaultObservabilityConfig()
-	} else if err := c.Observability.Validate(); err != nil {
-		return bizerror.Wrap(err, bizerror.ConfigError, "observability config validation failed")
+	if c.Observability != nil {
+		if err := c.Observability.Validate(); err != nil {
+			return bizerror.Wrap(err, bizerror.ConfigError, "observability config validation failed")
+		}
 	}
-	if c.Discovery == nil || len(c.Discovery) == 0 {
+	if len(c.Discovery) == 0 {
 		return bizerror.New(bizerror.ConfigError, "discover config is needed")
 	}
 	for _, d := range c.Discovery {
@@ -155,10 +155,10 @@ func (c AdminConfig) Validate() error {
 	if len(discoveryIDList) != len(slice.Unique(discoveryIDList)) {
 		return bizerror.New(bizerror.ConfigError, "discovery id must be unique")
 	}
-	if c.Engine == nil {
-		c.Engine = engine.DefaultResourceEngineConfig()
-	} else if err := c.Engine.Validate(); err != nil {
-		return bizerror.Wrap(err, bizerror.ConfigError, "engine config validation failed")
+	if c.Engine != nil {
+		if err := c.Engine.Validate(); err != nil {
+			return bizerror.Wrap(err, bizerror.ConfigError, "engine config validation failed")
+		}
 	}
 	return nil
 }

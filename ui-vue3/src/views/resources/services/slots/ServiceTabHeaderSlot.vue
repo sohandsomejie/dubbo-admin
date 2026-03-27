@@ -15,18 +15,8 @@
   ~ limitations under the License.
 -->
 <template>
-  <!--      example like blow-->
   <div class="__container_ServiceTabHeaderSlot">
     <span class="header-desc">{{ $t('serviceDomain.name') }}: {{ serviceIdentity.serviceKey }}</span>
-    <!-- <a-select
-      v-model:value="versionGroupSelect.versionGroupValue"
-      :bordered="false"
-      style="width: 80%"
-    >
-      <a-select-option v-for="(item, index) in versionGroupSelect.versionGroupArr" :value="item" :key="index">
-        {{ item }}
-      </a-select-option>
-    </a-select> -->
   </div>
 </template>
 

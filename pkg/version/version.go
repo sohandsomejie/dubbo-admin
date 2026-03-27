@@ -22,10 +22,6 @@ import (
 	"strings"
 )
 
-var (
-	buildVersion = "0.7.0"
-)
-
 var Build BuildInfo
 
 func init() {

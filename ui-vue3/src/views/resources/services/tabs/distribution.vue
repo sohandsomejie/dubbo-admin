@@ -103,7 +103,6 @@ function getDistribution(params: any) {
     version: serviceIdentity.version,
     group: serviceIdentity.group,
     side: 'consumer',
-    providerAppName: route.query?.providerAppName || '',
     ...params
   })
 }

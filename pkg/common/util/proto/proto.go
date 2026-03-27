@@ -21,8 +21,8 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/golang/protobuf/jsonpb"
-	protov1 "github.com/golang/protobuf/proto"
+	jsonpb "github.com/golang/protobuf/jsonpb" //nolint:staticcheck // preserve legacy JSON mapping behavior expected by existing configs
+	protov1 "github.com/golang/protobuf/proto" //nolint:staticcheck // jsonpb still operates on v1 messages
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"
 	"sigs.k8s.io/yaml"

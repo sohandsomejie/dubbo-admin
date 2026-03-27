@@ -42,13 +42,13 @@ func PageListTagRule(ctx consolectx.Context, req *model.SearchReq) (*model.Searc
 		logger.Errorf("search tag rule error: %v", err)
 		return nil, bizerror.New(bizerror.InternalError, "search tag rule failed, please try again")
 	}
-	if pageData.Data == nil || len(pageData.Data) == 0 {
+	if len(pageData.Data) == 0 {
 		return &model.SearchPaginationResult{
 			List: nil,
 			PageInfo: coremodel.Pagination{
 				Total:      0,
-				PageSize:   req.PageReq.PageSize,
-				PageOffset: req.PageReq.PageOffset,
+				PageSize:   req.PageSize,
+				PageOffset: req.PageOffset,
 			},
 		}, nil
 	}
@@ -78,8 +78,8 @@ func SearchTagRuleByKeywords(ctx consolectx.Context, req *model.SearchReq) (*mod
 			List: nil,
 			PageInfo: coremodel.Pagination{
 				Total:      0,
-				PageSize:   req.PageReq.PageSize,
-				PageOffset: req.PageReq.PageOffset,
+				PageSize:   req.PageSize,
+				PageOffset: req.PageOffset,
 			},
 		}, nil
 	}
@@ -93,8 +93,8 @@ func SearchTagRuleByKeywords(ctx consolectx.Context, req *model.SearchReq) (*mod
 		},
 		PageInfo: coremodel.Pagination{
 			Total:      1,
-			PageSize:   req.PageReq.PageSize,
-			PageOffset: req.PageReq.PageOffset,
+			PageSize:   req.PageSize,
+			PageOffset: req.PageOffset,
 		},
 	}, nil
 }

@@ -27,18 +27,20 @@ export const searchService = (params: any): Promise<any> => {
 }
 
 export const getServiceDetail = ({
+  serviceKey,
   serviceName,
   version,
   group
 }: {
-  serviceName: string
+  serviceKey?: string
+  serviceName?: string
   version?: string
   group?: string
 }): Promise<any> => {
   return request({
     url: '/service/detail',
     method: 'get',
-    params: { serviceName, version, group }
+    params: { serviceKey, serviceName, version, group }
   })
 }
 

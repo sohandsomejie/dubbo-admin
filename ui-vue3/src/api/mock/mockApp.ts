@@ -20,7 +20,7 @@ import devTool from '@/utils/DevToolUtil'
 
 Mock.mock(devTool.mockUrl('/application/graph'), 'get', () => {
   return {
-    code: 'Success',
+    code: 200,
     message: 'success',
     data: {
       nodes: [
@@ -212,7 +212,7 @@ Mock.mock('/mock/application/event', 'get', () => {
 
 Mock.mock(devTool.mockUrl('/mock/application/service/form'), 'get', () => {
   return {
-    code: 'Success',
+    code: 200,
     message: 'success',
     data: {
       list: [
@@ -220,8 +220,7 @@ Mock.mock(devTool.mockUrl('/mock/application/service/form'), 'get', () => {
           serviceName: 'org.apache.dubbo.samples.CommentService',
           serviceKey: 'org.apache.dubbo.samples.CommentService:1.0.0:group1',
           version: '1.0.0',
-          group: 'group1',
-          providerAppName: 'shop-comment'
+          group: 'group1'
         }
       ],
       pageInfo: {

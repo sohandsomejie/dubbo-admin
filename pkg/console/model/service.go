@@ -49,7 +49,6 @@ type ServiceSearchResp struct {
 	ServiceKey      string `json:"serviceKey"`
 	Version         string `json:"version"`
 	Group           string `json:"group"`
-	ProviderAppName string `json:"providerAppName,omitempty"`
 	ConsumerAppName string `json:"consumerAppName,omitempty"`
 }
 
@@ -75,7 +74,6 @@ type ServiceTabDistributionReq struct {
 	Group           string `json:"group"  form:"group"`
 	Side            string `json:"side" form:"side"  binding:"required"`
 	Mesh            string `json:"mesh" form:"mesh" binding:"required"`
-	ProviderAppName string `json:"providerAppName"  form:"providerAppName"`
 	Keywords        string `json:"keywords"  form:"keywords"`
 	coremodel.PageReq
 }

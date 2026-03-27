@@ -157,7 +157,7 @@ const detailTitle = computed(() => {
   return currentDetailKey.value ? `${base}：${currentDetailKey.value}` : base
 })
 
-const detailEntryBlacklist = new Set<string>(['versionGroups', 'appName'])
+const detailEntryBlacklist = new Set<string>(['appName'])
 
 const detailEntries = computed(() => {
   const data = detailData.value ?? {}

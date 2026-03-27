@@ -76,6 +76,7 @@ func GetConfiguratorWithRuleName(ctx consolectx.Context) gin.HandlerFunc {
 		if res == nil {
 			c.JSON(http.StatusOK, model.NewBizErrorResp(
 				bizerror.New(bizerror.NotFoundError, fmt.Sprintf("%s not found", ruleName))))
+			return
 		}
 		c.JSON(http.StatusOK, model.GenDynamicConfigToResp(res.Spec))
 	}

@@ -134,8 +134,6 @@ func (rt *runtime) Start(stop <-chan struct{}) error {
 		}()
 	}
 	logger.Info("Admin started successfully")
-	select {
-	case <-stop:
-		return nil
-	}
+	<-stop
+	return nil
 }

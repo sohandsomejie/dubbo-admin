@@ -46,8 +46,7 @@ provide<GrafanaState>(
       return {
         serviceName: serviceIdentity.serviceName,
         version: serviceIdentity.version || undefined,
-        group: serviceIdentity.group || undefined,
-        providerAppName: route.query.providerAppName as string | undefined
+        group: serviceIdentity.group || undefined
       }
     })()
   })

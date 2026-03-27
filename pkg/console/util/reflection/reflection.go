@@ -189,7 +189,7 @@ func (r *rpcReflection) Close() {
 	}
 
 	if r.clientConn != nil {
-		r.clientConn.Close()
+		_ = r.clientConn.Close()
 		r.clientConn = nil
 	}
 }
@@ -225,8 +225,7 @@ func (r *rpcReflection) Invoke(ctx context.Context, methodName, input string) (r
 	cc := r.clientConn
 
 	// input string, request message
-	var in io.Reader
-	in = strings.NewReader(input)
+	in := io.Reader(strings.NewReader(input))
 
 	options := grpcurl.FormatOptions{
 		EmitJSONDefaultFields: true,

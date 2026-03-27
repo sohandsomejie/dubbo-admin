@@ -23,7 +23,7 @@ import (
 	"reflect"
 	"strings"
 
-	. "k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/cache"
 
 	"github.com/apache/dubbo-admin/pkg/core/resource/model"
 	"github.com/apache/dubbo-admin/pkg/core/runtime"
@@ -32,7 +32,7 @@ import (
 // ResourceStore defines the interface for the persistance of a resource
 // ResourceStore expanded the interface of cache.Indexer and cache.Store
 type ResourceStore interface {
-	Indexer
+	cache.Indexer
 	// GetByKeys get resources by keys, return list of resource.
 	// if a resource of specified key doesn't exist in the store, resource list will not include it
 	GetByKeys(keys []string) ([]model.Resource, error)

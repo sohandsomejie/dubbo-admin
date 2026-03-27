@@ -95,7 +95,7 @@ func (m mockResourceList) DeepCopyObject() runtime.Object {
 	out := &mockResourceList{
 		TypeMeta: m.TypeMeta,
 	}
-	m.ListMeta.DeepCopyInto(&out.ListMeta)
+	m.DeepCopyInto(&out.ListMeta)
 
 	if len(m.Items) == 0 {
 		return out
@@ -120,7 +120,7 @@ func setupTestStore(t *testing.T) (*GormStore, func()) {
 	tmpFile, err := os.CreateTemp("", fmt.Sprintf("test-db-%s-*.db", t.Name()))
 	require.NoError(t, err)
 	dbPath := tmpFile.Name()
-	tmpFile.Close()
+	require.NoError(t, tmpFile.Close())
 
 	dialector := sqlite.Open(dbPath)
 	pool, err := NewConnectionPool(dialector, storecfg.MySQL, t.Name(), DefaultConnectionPoolConfig())
@@ -145,8 +145,8 @@ func setupTestStore(t *testing.T) (*GormStore, func()) {
 
 	// Cleanup function
 	cleanup := func() {
-		pool.Close()
-		os.Remove(dbPath)
+		assert.NoError(t, pool.Close())
+		assert.NoError(t, os.Remove(dbPath))
 	}
 
 	return store, cleanup
@@ -1357,7 +1357,9 @@ func TestGormStore_ConcurrentOperations(t *testing.T) {
 	dialector := sqlite.Open("file::memory:?cache=shared&_journal_mode=WAL")
 	pool, err := NewConnectionPool(dialector, storecfg.MySQL, "test-address", DefaultConnectionPoolConfig())
 	require.NoError(t, err)
-	defer pool.Close()
+	defer func() {
+		assert.NoError(t, pool.Close())
+	}()
 
 	// Register the mock resource type
 	kind := model.ResourceKind("TestResource")

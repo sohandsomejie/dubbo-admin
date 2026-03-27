@@ -42,13 +42,13 @@ func PageListConfiguratorRule(ctx consolectx.Context, req *model.SearchReq) (*mo
 		logger.Errorf("search dynamic config rule error: %v", err)
 		return nil, bizerror.New(bizerror.InternalError, "search dynamic config rule failed, please try again")
 	}
-	if pageData.Data == nil || len(pageData.Data) == 0 {
+	if len(pageData.Data) == 0 {
 		return &model.SearchPaginationResult{
 			List: nil,
 			PageInfo: coremodel.Pagination{
 				Total:      0,
-				PageSize:   req.PageReq.PageSize,
-				PageOffset: req.PageReq.PageOffset,
+				PageSize:   req.PageSize,
+				PageOffset: req.PageOffset,
 			},
 		}, nil
 	}
@@ -80,8 +80,8 @@ func SearchConfiguratorRuleByKeywords(ctx consolectx.Context, req *model.SearchR
 			List: nil,
 			PageInfo: coremodel.Pagination{
 				Total:      0,
-				PageSize:   req.PageReq.PageSize,
-				PageOffset: req.PageReq.PageOffset,
+				PageSize:   req.PageSize,
+				PageOffset: req.PageOffset,
 			},
 		}, nil
 	}
@@ -95,8 +95,8 @@ func SearchConfiguratorRuleByKeywords(ctx consolectx.Context, req *model.SearchR
 		List: []*model.ConfiguratorSearchResp{resp},
 		PageInfo: coremodel.Pagination{
 			Total:      1,
-			PageSize:   req.PageReq.PageSize,
-			PageOffset: req.PageReq.PageOffset,
+			PageSize:   req.PageSize,
+			PageOffset: req.PageOffset,
 		},
 	}, nil
 }

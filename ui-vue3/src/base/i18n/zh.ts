@@ -229,7 +229,6 @@ const words: I18nType = {
     registryClusters: '注册集群'
   },
   service: '服务',
-  versionGroup: '版本&分组',
   avgQPS: 'QPS',
   provider: '提供者',
   subset: '分组',

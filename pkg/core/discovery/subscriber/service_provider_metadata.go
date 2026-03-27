@@ -19,8 +19,9 @@ package subscriber
 
 import (
 	"reflect"
+	"sort"
+	"strings"
 
-	"github.com/duke-git/lancet/v2/slice"
 	"github.com/duke-git/lancet/v2/strutil"
 	"k8s.io/client-go/tools/cache"
 
@@ -34,6 +35,8 @@ import (
 	"github.com/apache/dubbo-admin/pkg/core/store"
 	"github.com/apache/dubbo-admin/pkg/core/store/index"
 )
+
+const serviceProviderAppsAnnotation = "dubbo.apache.org/provider-apps"
 
 type ServiceProviderMetadataEventSubscriber struct {
 	appStore             store.ResourceStore
@@ -133,33 +136,63 @@ func (s *ServiceProviderMetadataEventSubscriber) processUpsert(r *meshresource.S
 		logger.Infof("application resource already exists, appName: %s, mesh: %s", r.Spec.ProviderAppName, r.Mesh)
 	}
 
-	// upsert Service (sync methods)
-	return s.upsertService(r)
+	// upsert Service projection from provider metadata
+	return s.syncServiceProjection(r.Mesh, r.Spec, "", r)
 }
 
-func (s *ServiceProviderMetadataEventSubscriber) upsertService(r *meshresource.ServiceProviderMetadataResource) error {
-	if strutil.IsBlank(r.Spec.ServiceName) {
-		logger.Warnf("skip service upsert because spec.serviceName is blank, res:%s", r.String())
+func (s *ServiceProviderMetadataEventSubscriber) syncServiceProjection(
+	mesh string,
+	spec *meshproto.ServiceProviderMetadata,
+	excludeKey string,
+	include ...*meshresource.ServiceProviderMetadataResource) error {
+	if spec == nil || strutil.IsBlank(spec.ServiceName) {
 		return nil
 	}
-	svcName := r.Spec.ServiceName + constants.ColonSeparator + r.Spec.Version + constants.ColonSeparator + r.Spec.Group
-	svcKey := coremodel.BuildResourceKey(r.Mesh, svcName)
-
-	// Extract method names from provider metadata
-	newMethods := extractMethodNames(r.Spec.Methods)
+	svcName := buildProviderServiceKey(spec)
+	svcKey := coremodel.BuildResourceKey(mesh, svcName)
+	methods, providerApps, err := s.collectServiceProjection(mesh, svcName, excludeKey, include...)
+	if err != nil {
+		return err
+	}
 
 	raw, exists, err := s.serviceStore.GetByKey(svcKey)
 	if err != nil {
 		logger.Errorf("get service resource failed, svcKey: %s, cause: %s", svcKey, err.Error())
 		return err
 	}
-	if exists {
+	if len(providerApps) == 0 {
+		if !exists {
+			return nil
+		}
 		svcRes, ok := raw.(*meshresource.ServiceResource)
 		if !ok {
 			return bizerror.NewAssertionError(meshresource.ServiceKind, raw)
 		}
-		merged := slice.Unique(append(append([]string{}, svcRes.Spec.Methods...), newMethods...))
-		svcRes.Spec.Methods = merged
+		if err := s.serviceStore.Delete(svcRes); err != nil {
+			logger.Errorf("delete service resource failed, svcKey: %s, cause: %s", svcKey, err.Error())
+			return err
+		}
+		s.emitter.Send(events.NewResourceChangedEvent(cache.Deleted, svcRes, nil))
+		return nil
+	}
+
+	var svcRes *meshresource.ServiceResource
+	if exists {
+		var ok bool
+		svcRes, ok = raw.(*meshresource.ServiceResource)
+		if !ok {
+			return bizerror.NewAssertionError(meshresource.ServiceKind, raw)
+		}
+	} else {
+		svcRes = meshresource.NewServiceResourceWithAttributes(svcName, mesh)
+	}
+	svcRes.Spec.Name = spec.ServiceName
+	svcRes.Spec.Version = spec.Version
+	svcRes.Spec.Group = spec.Group
+	svcRes.Spec.Methods = methods
+	ensureServiceAnnotations(svcRes)
+	svcRes.Annotations[serviceProviderAppsAnnotation] = strings.Join(providerApps, ",")
+	if exists {
 		if err := s.serviceStore.Update(svcRes); err != nil {
 			logger.Errorf("update service resource failed, svcKey: %s, cause: %s", svcKey, err.Error())
 			return err
@@ -167,18 +200,96 @@ func (s *ServiceProviderMetadataEventSubscriber) upsertService(r *meshresource.S
 		s.emitter.Send(events.NewResourceChangedEvent(cache.Updated, nil, svcRes))
 		return nil
 	}
-
-	svcRes := meshresource.NewServiceResourceWithAttributes(svcName, r.Mesh)
-	svcRes.Spec.Name = r.Spec.ServiceName
-	svcRes.Spec.Version = r.Spec.Version
-	svcRes.Spec.Group = r.Spec.Group
-	svcRes.Spec.Methods = newMethods
 	if err := s.serviceStore.Add(svcRes); err != nil {
 		logger.Errorf("add service resource failed, svcKey: %s, cause: %s", svcKey, err.Error())
 		return err
 	}
 	s.emitter.Send(events.NewResourceChangedEvent(cache.Added, nil, svcRes))
 	return nil
+}
+
+func (s *ServiceProviderMetadataEventSubscriber) processUpdate(
+	oldObj *meshresource.ServiceProviderMetadataResource,
+	newObj *meshresource.ServiceProviderMetadataResource) error {
+	if newObj == nil || newObj.Spec == nil {
+		return s.processUpsert(newObj)
+	}
+
+	if oldObj != nil && oldObj.Spec != nil && !strutil.IsBlank(oldObj.Spec.ServiceName) {
+		oldSvcName := buildProviderServiceKey(oldObj.Spec)
+		newSvcName := buildProviderServiceKey(newObj.Spec)
+		if oldSvcName != newSvcName {
+			if err := s.syncServiceProjection(oldObj.Mesh, oldObj.Spec, oldObj.ResourceKey()); err != nil {
+				return err
+			}
+			return s.syncServiceProjection(newObj.Mesh, newObj.Spec, "", newObj)
+		}
+	}
+	excludeKey := ""
+	if oldObj != nil {
+		excludeKey = oldObj.ResourceKey()
+	}
+	return s.syncServiceProjection(newObj.Mesh, newObj.Spec, excludeKey, newObj)
+}
+
+func (s *ServiceProviderMetadataEventSubscriber) processDelete(r *meshresource.ServiceProviderMetadataResource) error {
+	if r.Spec == nil || strutil.IsBlank(r.Spec.ServiceName) {
+		return nil
+	}
+	return s.syncServiceProjection(r.Mesh, r.Spec, r.ResourceKey())
+}
+
+func (s *ServiceProviderMetadataEventSubscriber) collectServiceProjection(
+	mesh, svcName, excludeKey string,
+	include ...*meshresource.ServiceProviderMetadataResource) ([]string, []string, error) {
+	resources, err := s.serviceProviderStore.ListByIndexes(map[string]string{
+		index.ByServiceProviderServiceKey: svcName,
+		index.ByMeshIndex:                 mesh,
+	})
+	if err != nil {
+		logger.Errorf("list provider metadata failed, svcKey: %s, cause: %s", svcName, err.Error())
+		return nil, nil, err
+	}
+
+	providersByKey := make(map[string]*meshresource.ServiceProviderMetadataResource, len(resources)+len(include))
+	for _, resource := range resources {
+		provider, ok := resource.(*meshresource.ServiceProviderMetadataResource)
+		if !ok {
+			return nil, nil, bizerror.NewAssertionError(meshresource.ServiceProviderMetadataKind, resource)
+		}
+		if provider.ResourceKey() == excludeKey || provider.Spec == nil {
+			continue
+		}
+		providersByKey[provider.ResourceKey()] = provider
+	}
+	for _, provider := range include {
+		if provider == nil || provider.Spec == nil {
+			continue
+		}
+		providersByKey[provider.ResourceKey()] = provider
+	}
+
+	methodSet := make(map[string]struct{})
+	appSet := make(map[string]struct{})
+	for _, provider := range providersByKey {
+		for _, method := range extractMethodNames(provider.Spec.Methods) {
+			methodSet[method] = struct{}{}
+		}
+		if provider.Spec.ProviderAppName != "" {
+			appSet[provider.Spec.ProviderAppName] = struct{}{}
+		}
+	}
+	methods := make([]string, 0, len(methodSet))
+	for method := range methodSet {
+		methods = append(methods, method)
+	}
+	sort.Strings(methods)
+	providerApps := make([]string, 0, len(appSet))
+	for app := range appSet {
+		providerApps = append(providerApps, app)
+	}
+	sort.Strings(providerApps)
+	return methods, providerApps, nil
 }
 
 // extractMethodNames extracts the Name from each Method proto message.
@@ -192,93 +303,12 @@ func extractMethodNames(methods []*meshproto.Method) []string {
 	return names
 }
 
-func (s *ServiceProviderMetadataEventSubscriber) processUpdate(
-	oldObj *meshresource.ServiceProviderMetadataResource,
-	newObj *meshresource.ServiceProviderMetadataResource) error {
-	if newObj.Spec == nil {
-		return s.processUpsert(newObj)
+func ensureServiceAnnotations(svcRes *meshresource.ServiceResource) {
+	if svcRes.Annotations == nil {
+		svcRes.Annotations = make(map[string]string)
 	}
-
-	// If the service key changed, delete the old Service resource first.
-	if oldObj != nil && oldObj.Spec != nil && !strutil.IsBlank(oldObj.Spec.ServiceName) {
-		oldSvcName := oldObj.Spec.ServiceName + constants.ColonSeparator + oldObj.Spec.Version + constants.ColonSeparator + oldObj.Spec.Group
-		newSvcName := newObj.Spec.ServiceName + constants.ColonSeparator + newObj.Spec.Version + constants.ColonSeparator + newObj.Spec.Group
-		if oldSvcName != newSvcName {
-			logger.Infof("provider metadata service key changed (old: %s, new: %s), cleaning up stale service",
-				oldSvcName, newSvcName)
-			if err := s.processDelete(oldObj); err != nil {
-				return err
-			}
-		}
-	}
-	return s.processUpsert(newObj)
 }
 
-func (s *ServiceProviderMetadataEventSubscriber) processDelete(r *meshresource.ServiceProviderMetadataResource) error {
-	if r.Spec == nil {
-		return nil
-	}
-	if strutil.IsBlank(r.Spec.ServiceName) {
-		return nil
-	}
-	svcName := r.Spec.ServiceName + constants.ColonSeparator + r.Spec.Version + constants.ColonSeparator + r.Spec.Group
-	svcKey := coremodel.BuildResourceKey(r.Mesh, svcName)
-
-	raw, exists, err := s.serviceStore.GetByKey(svcKey)
-	if err != nil {
-		logger.Errorf("get service resource failed during delete, svcKey: %s, cause: %s", svcKey, err.Error())
-		return err
-	}
-	if !exists {
-		return nil
-	}
-	svcRes, ok := raw.(*meshresource.ServiceResource)
-	if !ok {
-		return bizerror.NewAssertionError(meshresource.ServiceKind, raw)
-	}
-
-	methods, err := s.collectMethodsForService(r.Mesh, svcName, svcKey, r.ResourceKey())
-	if err != nil {
-		return err
-	}
-	if len(methods) == 0 {
-		if err := s.serviceStore.Delete(svcRes); err != nil {
-			logger.Errorf("delete service resource failed, svcKey: %s, cause: %s", svcKey, err.Error())
-			return err
-		}
-		s.emitter.Send(events.NewResourceChangedEvent(cache.Deleted, svcRes, nil))
-		return nil
-	}
-
-	svcRes.Spec.Methods = methods
-	if err := s.serviceStore.Update(svcRes); err != nil {
-		logger.Errorf("update service resource failed during delete, svcKey: %s, cause: %s", svcKey, err.Error())
-		return err
-	}
-	s.emitter.Send(events.NewResourceChangedEvent(cache.Updated, nil, svcRes))
-	return nil
-}
-
-func (s *ServiceProviderMetadataEventSubscriber) collectMethodsForService(mesh, svcName, svcKey, excludeKey string) ([]string, error) {
-	resources, err := s.serviceProviderStore.ListByIndexes(map[string]string{
-		index.ByServiceProviderServiceKey: svcName,
-		index.ByMeshIndex:                 mesh,
-	})
-	if err != nil {
-		logger.Errorf("list provider metadata failed, svcKey: %s, cause: %s", svcKey, err.Error())
-		return nil, err
-	}
-
-	methods := make([]string, 0)
-	for _, resource := range resources {
-		provider, ok := resource.(*meshresource.ServiceProviderMetadataResource)
-		if !ok {
-			return nil, bizerror.NewAssertionError(meshresource.ServiceProviderMetadataKind, resource)
-		}
-		if provider.ResourceKey() == excludeKey || provider.Spec == nil {
-			continue
-		}
-		methods = append(methods, extractMethodNames(provider.Spec.Methods)...)
-	}
-	return slice.Unique(methods), nil
+func buildProviderServiceKey(spec *meshproto.ServiceProviderMetadata) string {
+	return spec.ServiceName + constants.ColonSeparator + spec.Version + constants.ColonSeparator + spec.Group
 }

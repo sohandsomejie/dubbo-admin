@@ -24,7 +24,7 @@ import (
 )
 
 func GetOverridePath(key string) string {
-	key = strings.Replace(key, "/", "*", -1)
+	key = strings.ReplaceAll(key, "/", "*")
 	return key + constants.ConfiguratorRuleDotSuffix
 }
 

@@ -18,6 +18,7 @@
 package subscriber
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -201,6 +202,7 @@ func TestProviderDelete_RebuildsMethodsFromRemainingProviders(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, exists)
 	assert.Equal(t, []string{"listUsers"}, raw.(*meshresource.ServiceResource).Spec.Methods)
+	assert.Equal(t, "provider-b", raw.(*meshresource.ServiceResource).Annotations[serviceProviderAppsAnnotation])
 }
 
 // TestProviderUpdate_ServiceKeyChanged_CleansOldRelationship verifies that when
@@ -279,6 +281,66 @@ func TestProviderUpdate_SameKey_NoStaleCleanup(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, exists, "ServiceResource should still exist after no-op update")
 	assert.Contains(t, raw.(*meshresource.ServiceResource).Spec.Methods, "sayHello")
+}
+
+func TestProviderUpdate_SameKey_RebuildsMethodsAndProviderApps(t *testing.T) {
+	appStore, svcStore := newTestStores(t)
+	emitter := &noopEmitter{}
+	providerStore := memorystore.NewMemoryResourceStore(meshresource.ServiceProviderMetadataKind)
+	require.NoError(t, providerStore.Init(nil))
+	sub := NewServiceProviderMetadataEventSubscriber(appStore, svcStore, providerStore, emitter)
+
+	const (
+		mesh        = ""
+		serviceName = "com.example.DemoService"
+		version     = "1.0"
+		group       = "grp"
+	)
+
+	oldMeta := newProviderMetadata(serviceName, version, group, "provider-a", mesh, "sayHello", "oldMethod")
+	newMeta := newProviderMetadata(serviceName, version, group, "provider-b", mesh, "sayHello", "listUsers")
+	require.NoError(t, providerStore.Add(oldMeta))
+
+	err := sub.ProcessEvent(events.NewResourceChangedEvent(cache.Updated, oldMeta, newMeta))
+	require.NoError(t, err)
+
+	svcKey := serviceName + ":1.0:grp"
+	raw, exists, err := svcStore.GetByKey(coremodel.BuildResourceKey(mesh, svcKey))
+	require.NoError(t, err)
+	require.True(t, exists)
+
+	svcRes := raw.(*meshresource.ServiceResource)
+	assert.Equal(t, []string{"listUsers", "sayHello"}, svcRes.Spec.Methods)
+	assert.Equal(t, "provider-b", svcRes.Annotations[serviceProviderAppsAnnotation])
+}
+
+func TestProviderUpsert_StoresProviderAppsAnnotation(t *testing.T) {
+	appStore, svcStore := newTestStores(t)
+	emitter := &noopEmitter{}
+	providerStore := memorystore.NewMemoryResourceStore(meshresource.ServiceProviderMetadataKind)
+	require.NoError(t, providerStore.Init(nil))
+	sub := NewServiceProviderMetadataEventSubscriber(appStore, svcStore, providerStore, emitter)
+
+	const (
+		mesh        = ""
+		serviceName = "com.example.DemoService"
+		version     = "1.0"
+		group       = "grp"
+	)
+
+	provMeta1 := newProviderMetadata(serviceName, version, group, "provider-a", mesh, "sayHello")
+	provMeta2 := newProviderMetadata(serviceName, version, group, "provider-b", mesh, "listUsers")
+	require.NoError(t, sub.ProcessEvent(events.NewResourceChangedEvent(cache.Added, nil, provMeta1)))
+	require.NoError(t, providerStore.Add(provMeta1))
+	require.NoError(t, sub.ProcessEvent(events.NewResourceChangedEvent(cache.Added, nil, provMeta2)))
+
+	svcKey := serviceName + ":1.0:grp"
+	raw, exists, err := svcStore.GetByKey(coremodel.BuildResourceKey(mesh, svcKey))
+	require.NoError(t, err)
+	require.True(t, exists)
+
+	apps := strings.Split(raw.(*meshresource.ServiceResource).Annotations[serviceProviderAppsAnnotation], ",")
+	assert.ElementsMatch(t, []string{"provider-a", "provider-b"}, apps)
 }
 
 func TestProviderUpdate_NewSpecNil_ReturnsErrorWithoutPanic(t *testing.T) {

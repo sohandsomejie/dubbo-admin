@@ -252,8 +252,8 @@ func TestGetOrCreatePool_ReuseExisting(t *testing.T) {
 	assert.Equal(t, 2, pool1.RefCount())
 
 	// Cleanup
-	pool1.Close()
-	pool2.Close()
+	require.NoError(t, pool1.Close())
+	require.NoError(t, pool2.Close())
 }
 
 func TestGetOrCreatePool_DifferentAddresses(t *testing.T) {
@@ -279,8 +279,8 @@ func TestGetOrCreatePool_DifferentAddresses(t *testing.T) {
 	assert.Equal(t, "address-2", pool2.Address())
 
 	// Cleanup
-	pool1.Close()
-	pool2.Close()
+	require.NoError(t, pool1.Close())
+	require.NoError(t, pool2.Close())
 }
 
 func TestGetOrCreatePool_DifferentStoreTypes(t *testing.T) {
@@ -306,8 +306,8 @@ func TestGetOrCreatePool_DifferentStoreTypes(t *testing.T) {
 	assert.Equal(t, storecfg.Postgres, pool2.storeType)
 
 	// Cleanup
-	pool1.Close()
-	pool2.Close()
+	require.NoError(t, pool1.Close())
+	require.NoError(t, pool2.Close())
 }
 
 func TestGetOrCreatePool_MemoryStoreError(t *testing.T) {
@@ -352,7 +352,9 @@ func TestConnectionPool_ConcurrentAccess(t *testing.T) {
 	dialector := sqlite.Open("file::memory:?cache=shared")
 	pool, err := NewConnectionPool(dialector, storecfg.MySQL, "test-address", DefaultConnectionPoolConfig())
 	require.NoError(t, err)
-	defer pool.Close()
+	defer func() {
+		assert.NoError(t, pool.Close())
+	}()
 
 	const numGoroutines = 10
 	var wg sync.WaitGroup
@@ -401,7 +403,7 @@ func TestConnectionPool_ConcurrentIncrement(t *testing.T) {
 
 	// Cleanup
 	for i := 0; i <= numGoroutines; i++ {
-		pool.Close()
+		require.NoError(t, pool.Close())
 	}
 }
 
@@ -441,7 +443,7 @@ func TestGetOrCreatePool_ConcurrentCreation(t *testing.T) {
 
 	// Cleanup
 	for i := 0; i < numGoroutines; i++ {
-		firstPool.Close()
+		require.NoError(t, firstPool.Close())
 	}
 }
 
@@ -456,7 +458,9 @@ func TestConnectionPool_CustomConfig(t *testing.T) {
 
 	pool, err := NewConnectionPool(dialector, storecfg.MySQL, "test-address", config)
 	require.NoError(t, err)
-	defer pool.Close()
+	defer func() {
+		assert.NoError(t, pool.Close())
+	}()
 
 	stats := pool.Stats()
 	assert.Equal(t, 20, stats.MaxOpenConnections)
@@ -473,7 +477,9 @@ func TestConnectionPool_NilConfig(t *testing.T) {
 	// Pass nil config - should use default
 	pool, err := GetOrCreatePool(dialector, storecfg.MySQL, "test-address", nil)
 	require.NoError(t, err)
-	defer pool.Close()
+	defer func() {
+		assert.NoError(t, pool.Close())
+	}()
 
 	assert.NotNil(t, pool)
 	stats := pool.Stats()

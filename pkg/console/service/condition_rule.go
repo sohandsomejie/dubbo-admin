@@ -71,8 +71,8 @@ func SearchConditionRuleByKeywords(ctx context.Context, req *model.SearchConditi
 			List: nil,
 			PageInfo: coremodel.Pagination{
 				Total:      0,
-				PageSize:   req.PageReq.PageSize,
-				PageOffset: req.PageReq.PageOffset,
+				PageSize:   req.PageSize,
+				PageOffset: req.PageOffset,
 			},
 		}, nil
 	}
@@ -80,8 +80,8 @@ func SearchConditionRuleByKeywords(ctx context.Context, req *model.SearchConditi
 		List: []*model.ConditionRuleSearchResp{ToSearchConditionRuleResp(conditionRuleRes)},
 		PageInfo: coremodel.Pagination{
 			Total:      1,
-			PageSize:   req.PageReq.PageSize,
-			PageOffset: req.PageReq.PageOffset,
+			PageSize:   req.PageSize,
+			PageOffset: req.PageOffset,
 		},
 	}, nil
 }

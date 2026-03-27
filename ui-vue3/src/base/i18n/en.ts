@@ -250,7 +250,6 @@ const words: I18nType = {
   instance: 'Instance',
   resourceDetails: 'Resource Details',
   service: 'Service',
-  versionGroup: 'Version & Group',
   avgQPS: 'last 1min QPS',
   provider: 'Provider',
   subset: 'Group',

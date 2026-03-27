@@ -123,9 +123,9 @@ func getAppProvideServiceInfo(ctx consolectx.Context, req *model.ApplicationServ
 	var indexes map[string]string
 	if strutil.IsNotBlank(req.ServiceName) {
 		indexes = map[string]string{
-			index.ByMeshIndex:                  req.Mesh,
-			index.ByServiceProviderAppName:     req.AppName,
-			index.ByServiceProviderServiceName: req.ServiceName,
+			index.ByMeshIndex:              req.Mesh,
+			index.ByServiceProviderAppName: req.AppName,
+			index.ByServiceServiceName:     req.ServiceName,
 		}
 	} else {
 		indexes = map[string]string{
@@ -133,27 +133,27 @@ func getAppProvideServiceInfo(ctx consolectx.Context, req *model.ApplicationServ
 			index.ByServiceProviderAppName: req.AppName,
 		}
 	}
-	pageData, err := manager.PageListByIndexes[*meshresource.ServiceProviderMetadataResource](
+	pageData, err := manager.PageListByIndexes[*meshresource.ServiceResource](
 		ctx.ResourceManager(),
-		meshresource.ServiceProviderMetadataKind,
+		meshresource.ServiceKind,
 		indexes,
 		req.PageReq,
 	)
 	if err != nil {
 		return nil, err
 	}
-	if pageData.Data == nil || len(pageData.Data) == 0 {
+	if len(pageData.Data) == 0 {
 		return &model.SearchPaginationResult{
-			List: []*meshresource.ServiceProviderMetadataResourceList{},
+			List: []*model.ServiceSearchResp{},
 			PageInfo: coremodel.Pagination{
 				Total:      0,
-				PageSize:   req.PageReq.PageSize,
-				PageOffset: req.PageReq.PageOffset,
+				PageSize:   req.PageSize,
+				PageOffset: req.PageOffset,
 			},
 		}, nil
 	}
-	respList := slice.Map(pageData.Data, func(_ int, item *meshresource.ServiceProviderMetadataResource) *model.ServiceSearchResp {
-		return ToServiceSearchRespByProvider(item)
+	respList := slice.Map(pageData.Data, func(_ int, item *meshresource.ServiceResource) *model.ServiceSearchResp {
+		return toServiceSearchResp(item)
 	})
 
 	pageResult := &model.SearchPaginationResult{
@@ -176,13 +176,13 @@ func getAppConsumeServiceInfo(ctx consolectx.Context, req *model.ApplicationServ
 	if err != nil {
 		return nil, err
 	}
-	if pageData.Data == nil || len(pageData.Data) == 0 {
+	if len(pageData.Data) == 0 {
 		return &model.SearchPaginationResult{
 			List: []*meshresource.ServiceConsumerMetadataResourceList{},
 			PageInfo: coremodel.Pagination{
 				Total:      0,
-				PageSize:   req.PageReq.PageSize,
-				PageOffset: req.PageReq.PageOffset,
+				PageSize:   req.PageSize,
+				PageOffset: req.PageOffset,
 			},
 		}, nil
 	}
@@ -211,8 +211,8 @@ func SearchApplications(ctx consolectx.Context, req *model.ApplicationSearchReq)
 			List: appResList,
 			PageInfo: coremodel.Pagination{
 				Total:      len(appResList),
-				PageSize:   req.PageReq.PageSize,
-				PageOffset: req.PageReq.PageOffset,
+				PageSize:   req.PageSize,
+				PageOffset: req.PageOffset,
 			},
 		}, nil
 	}
@@ -299,19 +299,19 @@ func UpInsertAppAccessLog(ctx consolectx.Context, appName string, openAccessLog 
 	}
 	// if not exists, create one configurator with access log enable
 	if res == nil {
-		return insertConfiguratorWithAccessLog(ctx, res, openAccessLog, appConfiguratorName, appName, mesh)
+		return insertConfiguratorWithAccessLog(ctx, openAccessLog, appConfiguratorName, appName, mesh)
 	}
 	// else we update the configurator
 	return updateConfiguratorWithAccessLog(ctx, res, openAccessLog, appConfiguratorName, appName, mesh)
 }
 
-func insertConfiguratorWithAccessLog(ctx consolectx.Context, res *meshresource.DynamicConfigResource, openAccessLog bool,
+func insertConfiguratorWithAccessLog(ctx consolectx.Context, openAccessLog bool,
 	appConfiguratorName, appName, mesh string) error {
 	// configurator is nil, accessLog is already closed
 	if !openAccessLog {
 		return nil
 	}
-	res = meshresource.NewDynamicConfigResourceWithAttributes(appConfiguratorName, mesh)
+	res := meshresource.NewDynamicConfigResourceWithAttributes(appConfiguratorName, mesh)
 	res.Spec = &meshproto.DynamicConfig{
 		Key:           appName,
 		Scope:         constants.ScopeApplication,

@@ -18,7 +18,6 @@
 package zkwatcher
 
 import (
-	"sync"
 	"time"
 
 	"github.com/dubbogo/go-zookeeper/zk"
@@ -52,7 +51,6 @@ type RecursiveWatcher struct {
 	basePath  string
 	eventChan chan ZookeeperEvent
 	stopChan  chan struct{}
-	mu        sync.Mutex
 }
 
 // NewRecursiveWatcher create a new recursive watcher
@@ -135,13 +133,14 @@ func (rw *RecursiveWatcher) watchDataChanges(path string) {
 
 		select {
 		case event := <-watcher.EvtCh:
-			if event.Type == zk.EventNodeDataChanged {
+			switch event.Type {
+			case zk.EventNodeDataChanged:
 				logger.Debugf("node data changed: %s", path)
 
 				// Re-watch data changes
 				go rw.watchDataChanges(path)
 				return
-			} else if event.Type == zk.EventNodeDeleted {
+			case zk.EventNodeDeleted:
 				// Node deleted, stop watching
 				logger.Debugf("node deleted: %s", path)
 				rw.eventChan <- ZookeeperEvent{

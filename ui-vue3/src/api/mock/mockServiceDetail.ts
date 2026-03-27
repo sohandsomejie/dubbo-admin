@@ -19,7 +19,7 @@ import Mock from 'mockjs'
 import devTool from '@/utils/DevToolUtil'
 
 Mock.mock(devTool.mockUrl('/mock/service/detail'), 'get', {
-  code: 'Success',
+  code: 200,
   message: 'success',
   data: {
     language: 'Java',

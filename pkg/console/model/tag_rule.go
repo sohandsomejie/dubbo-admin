@@ -60,14 +60,12 @@ func GenTagRouteResp(pb *meshproto.TagRoute) *CommonResp {
 
 func tagToRespTagElement(tags []*meshproto.Tag) []RespTagElement {
 	res := make([]RespTagElement, 0, len(tags))
-	if tags != nil {
-		for _, tag := range tags {
-			res = append(res, RespTagElement{
-				Addresses: tag.Addresses,
-				Match:     paramMatchToRespParamMatch(tag.Match),
-				Name:      tag.Name,
-			})
-		}
+	for _, tag := range tags {
+		res = append(res, RespTagElement{
+			Addresses: tag.Addresses,
+			Match:     paramMatchToRespParamMatch(tag.Match),
+			Name:      tag.Name,
+		})
 	}
 	return res
 }
