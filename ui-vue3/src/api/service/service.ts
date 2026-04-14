@@ -26,11 +26,19 @@ export const searchService = (params: any): Promise<any> => {
   })
 }
 
-export const getServiceDetail = (params: any): Promise<any> => {
+export const getServiceDetail = ({
+  serviceName,
+  version,
+  group
+}: {
+  serviceName: string
+  version?: string
+  group?: string
+}): Promise<any> => {
   return request({
     url: '/service/detail',
     method: 'get',
-    params
+    params: { serviceName, version, group }
   })
 }
 
@@ -194,5 +202,15 @@ export const serviceGenericInvokeAPI = (data: {
     url: '/service/generic/invoke',
     method: 'post',
     data
+  })
+}
+
+export const getServiceGraph = (serviceName: string): Promise<any> => {
+  return request({
+    url: '/service/graph',
+    method: 'get',
+    params: {
+      serviceName
+    }
   })
 }
