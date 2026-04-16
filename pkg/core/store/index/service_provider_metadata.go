@@ -31,6 +31,7 @@ const (
 	ByServiceProviderAppName     = "idx_service_provider_app_name"
 	ByServiceProviderServiceKey  = "idx_service_provider_service_key"
 	ByServiceProviderServiceName = "idx_service_provider_service_name"
+	ByServiceProviderServiceKey  = "idx_service_provider_service_key"
 )
 
 func init() {
@@ -38,6 +39,7 @@ func init() {
 		ByServiceProviderAppName:     byServiceProviderAppName,
 		ByServiceProviderServiceKey:  byServiceProviderServiceKey,
 		ByServiceProviderServiceName: byServiceProviderServiceName,
+		ByServiceProviderServiceKey:  byServiceProviderServiceKey,
 	})
 }
 

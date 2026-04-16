@@ -50,7 +50,6 @@ type ServiceSearchResp struct {
 	ServiceName     string `json:"serviceName"`
 	Version         string `json:"version"`
 	Group           string `json:"group"`
-	ProviderAppName string `json:"providerAppName,omitempty"`
 	ConsumerAppName string `json:"consumerAppName,omitempty"`
 }
 
@@ -65,13 +64,12 @@ func (a ByServiceName) Less(i, j int) bool {
 func (a ByServiceName) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
 type ServiceTabDistributionReq struct {
-	ServiceName     string `json:"serviceName"  form:"serviceName" binding:"required"`
-	Version         string `json:"version"  form:"version"`
-	Group           string `json:"group"  form:"group"`
-	Side            string `json:"side" form:"side"  binding:"required"`
-	Mesh            string `json:"mesh" form:"mesh" binding:"required"`
-	ProviderAppName string `json:"providerAppName"  form:"providerAppName"`
-	Keywords        string `json:"keywords"  form:"keywords"`
+	ServiceName string `json:"serviceName"  form:"serviceName" binding:"required"`
+	Version     string `json:"version"  form:"version"`
+	Group       string `json:"group"  form:"group"`
+	Side        string `json:"side" form:"side"  binding:"required"`
+	Mesh        string `json:"mesh" form:"mesh" binding:"required"`
+	Keywords    string `json:"keywords"  form:"keywords"`
 	coremodel.PageReq
 }
 
