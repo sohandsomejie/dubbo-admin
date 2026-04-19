@@ -30,6 +30,7 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
 import { getAuthState, updateAuthState } from '@/utils/AuthUtil'
 import { createPinia } from 'pinia'
+import { syncAuthContext, syncI18nContext } from '@/context/utils/globalUtil'
 
 async function bootstrap() {
   if (import.meta.env.VITE_MOCK_ENABLED === 'true') {
@@ -44,6 +45,9 @@ async function bootstrap() {
   const pinia = createPinia()
 
   pinia.use(piniaPluginPersistedstate)
+
+  syncAuthContext()
+  syncI18nContext()
 
   app.use(Antd).use(Vue3ColorPicker).use(pinia).use(i18n).use(router).mount('#app')
 

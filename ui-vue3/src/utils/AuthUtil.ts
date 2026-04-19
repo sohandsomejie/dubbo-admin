@@ -16,10 +16,12 @@
  */
 
 import Cookies from 'js-cookie'
-// Format time
+import { syncAuthContext } from '@/context/utils/globalUtil'
+
 export function updateAuthState(state: boolean, username: string) {
   const authState = { state: state, userinfo: { username } }
   Cookies.set('auth-state', JSON.stringify(authState))
+  syncAuthContext()
 }
 export function getAuthState() {
   return JSON.parse(Cookies.get('auth-state') || '{}')
@@ -27,4 +29,5 @@ export function getAuthState() {
 
 export function removeAuthState() {
   Cookies.remove('auth-state')
+  syncAuthContext()
 }

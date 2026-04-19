@@ -70,6 +70,7 @@ import { getMetricsMetadata } from '@/api/service/serverInfo'
 import { useRoute } from 'vue-router'
 import { Chart } from '@antv/g2'
 import { queryPromSql } from '@/api/service/metricInfo'
+import { setPageRowData, setPageInfo, homeOverviewHandle } from '@/context/utils/pageUtil'
 
 let __null = PRIMARY_COLOR
 
@@ -86,6 +87,8 @@ let metricsMetadata = reactive({
 onMounted(() => {
   setTimeout(async () => {
     let clusterData = (await getClusterInfo({})).data
+    setPageRowData('homeOverview', clusterData)
+    setPageInfo('homeOverview', homeOverviewHandle(clusterData))
     metricsMetadata.info = <{ [key: string]: string }>(await getMetricsMetadata({})).data
     clusterInfo.info = <{ [key: string]: any }>clusterData
     clusterInfo.report = {

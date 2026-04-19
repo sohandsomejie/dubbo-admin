@@ -15,36 +15,28 @@
  * limitations under the License.
  */
 
-import { createI18n } from 'vue-i18n'
-import { LOCAL_STORAGE_LOCALE } from '@/base/constants'
-import { messages } from '@/base/i18n/messages'
-import { reactive } from 'vue'
-import { syncI18nContext } from '@/context/utils/globalUtil'
-
-export const localeConfig = reactive({
-  // todo use system's locale
-  locale: localStorage.getItem(LOCAL_STORAGE_LOCALE) || 'cn',
-  opts: [
-    {
-      value: 'en',
-      title: 'en'
-    },
-    {
-      value: 'cn',
-      title: '中文'
-    }
-  ]
-})
-
-export const i18n: any = createI18n({
-  locale: localeConfig.locale,
-  legacy: false,
-  globalInjection: true,
-  messages
-})
-
-export const changeLanguage = (l: any) => {
-  localStorage.setItem(LOCAL_STORAGE_LOCALE, l)
-  i18n.global.locale.value = l
-  syncI18nContext()
+type Context = {
+  global: Record<string, any>
+  page: Record<string, any>
+  route: Record<string, any>
 }
+
+export type ContextType = Context
+
+const context: Context = {
+  global: {},
+  page: {},
+  route: {}
+}
+
+export const resetContext = () => {
+  context.global = {}
+  context.page = {}
+  context.route = {}
+}
+
+export const resetPageContext = () => {
+  context.page = {}
+}
+
+export default context

@@ -16,13 +16,19 @@
  */
 
 import { createRouter, createWebHistory } from 'vue-router'
-import type { RouterMeta } from '@/router/RouterMeta'
 import { routes } from '@/router/defaultRoutes'
+import { resetPageContext } from '@/context'
+import { syncRouteContext } from '@/context/utils/routeUtil'
 
 const options = {
   history: createWebHistory('/admin'),
   routes
 }
 const router = createRouter(options)
+
+router.afterEach((to) => {
+  resetPageContext()
+  syncRouteContext(to)
+})
 
 export default router
