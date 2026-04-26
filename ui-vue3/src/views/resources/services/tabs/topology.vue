@@ -54,6 +54,7 @@ import { VueNode } from 'g6-extension-vue'
 
 import { useRoute } from 'vue-router'
 import { ExtensionCategory, register, Graph, NodeEvent } from '@antv/g6'
+import { buildServiceTopologyInfo } from '@/context/infohandle/services'
 const route = useRoute()
 
 // G6 graph instance for this view (resize/destroy lifecycle)
@@ -332,15 +333,13 @@ watch(detailEntries, () => {
 })
 onMounted(async () => {
   try {
-    // Fetch service graph by route param and render with force layout
     const serviceName = String(route.params?.pathId ?? '')
-    console.log('topology', serviceName)
     const res = await getServiceGraph(serviceName)
     if (res?.code !== HTTP_STATUS.SUCCESS) return
     const graphData = buildGraphData(res?.data)
     renderTopology(graphData)
+    buildServiceTopologyInfo(serviceName, graphData)
 
-    // Resize canvas on window resize (keep container width responsive)
     resizeHandler = () => {
       const root = document.getElementById('topology')
       if (!root || !graphRef.value) return

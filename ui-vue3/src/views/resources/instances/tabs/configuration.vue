@@ -45,6 +45,7 @@ import {
   updateInstanceTrafficSwitchAPI
 } from '@/api/service/instance'
 import { HTTP_STATUS } from '@/base/http/constants'
+import { buildInstanceConfigurationInfo } from '@/context/infohandle/instances'
 const route = useRoute()
 
 let options: any = reactive({
@@ -138,9 +139,16 @@ const updateInstanceTrafficSwitch = async (trafficDisable: boolean) => {
   }
 }
 
-onMounted(() => {
-  getInstanceLogSwitch()
-  getInstanceTrafficSwitch()
+onMounted(async () => {
+  await Promise.all([getInstanceLogSwitch(), getInstanceTrafficSwitch()])
+  const config = {
+    name: route.params.name as string,
+    ip: route.params.pathId as string,
+    appName: route.params.appName as string | undefined,
+    logSwitch: options.list.find((item: any) => item.key === 'log')?.form?.logFlag,
+    trafficSwitch: options.list.find((item: any) => item.key === 'flowDisabled')?.form?.flowDisabledFlag
+  }
+  buildInstanceConfigurationInfo(config)
 })
 </script>
 

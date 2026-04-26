@@ -22,13 +22,20 @@
 
 <script setup lang="ts">
 import GrafanaPage from '@/components/GrafanaPage.vue'
-import { provide, reactive } from 'vue'
+import { provide, reactive, onMounted } from 'vue'
 import { PROVIDE_INJECT_KEY } from '@/base/enums/ProvideInject'
 import { getInstanceTracingDashboard } from '@/api/service/instance'
 import { useRoute } from 'vue-router'
 import type { GrafanaState } from '@/types/grafana'
+import { buildInstanceLinkTrackingInfo } from '@/context/infohandle/instances'
 
 const route = useRoute()
+const instanceName = route.params.name as string
+const appName = route.params.appName as string | undefined
+
+onMounted(() => {
+  buildInstanceLinkTrackingInfo(instanceName, appName)
+})
 
 // 参数验证
 if (!route.params?.name) {

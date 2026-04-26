@@ -183,6 +183,7 @@ import {
 import { useRoute } from 'vue-router'
 import { scrollIntoView } from '@/utils/UIUtil'
 import { HTTP_STATUS } from '@/base/http/constants'
+import { buildApplicationConfigInfo } from '@/context/infohandle/applications'
 
 const route = useRoute()
 
@@ -498,10 +499,14 @@ const deleteGrayIsolation = (index: number) => {
   })
 }
 
-onMounted(() => {
-  getLogFlag()
-  getFlowWeight()
-  getGrayIsolation()
+onMounted(async () => {
+  await Promise.all([getLogFlag(), getFlowWeight(), getGrayIsolation()])
+  const config = {
+    appName: route.params.pathId as string,
+    logFlag: options.list.find((item: any) => item.key === 'log')?.form?.logFlag,
+    rules: options.list.find((item: any) => item.key === 'flow')?.form?.rules
+  }
+  buildApplicationConfigInfo(config)
 })
 </script>
 <style lang="less" scoped>

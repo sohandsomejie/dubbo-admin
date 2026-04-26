@@ -15,28 +15,67 @@
  * limitations under the License.
  */
 
-type Context = {
-  global: Record<string, any>
-  page: Record<string, any>
-  route: Record<string, any>
-}
+import { reactive } from 'vue'
+import type { AppContext, GlobalContext, PageContext, RouteContext } from './types'
 
-export type ContextType = Context
-
-const context: Context = {
+const initialContext: AppContext = {
   global: {},
-  page: {},
-  route: {}
+  page: {
+    rowData: {},
+    info: {}
+  },
+  route: {
+    path: '',
+    fullPath: '',
+    params: {},
+    query: {}
+  }
 }
 
-export const resetContext = () => {
+const context = reactive<AppContext>(initialContext)
+
+export const getContext = (): AppContext => context
+
+export const getGlobalContext = (): GlobalContext => context.global
+
+export const getPageContext = (): PageContext => context.page
+
+export const getRouteContext = (): RouteContext => context.route
+
+export const setGlobalContext = <K extends keyof GlobalContext>(
+  key: K,
+  value: GlobalContext[K]
+): void => {
+  context.global[key] = value
+}
+
+export const setPageContext = (): void => {
+  // rowData 和 info 已改为键控存储，不再使用此方法
+}
+
+export const setRouteContext = (value: Partial<RouteContext>): void => {
+  context.route = { ...context.route, ...value }
+}
+
+export const resetContext = (): void => {
   context.global = {}
-  context.page = {}
-  context.route = {}
+  context.page = { rowData: {}, info: {} }
+  context.route = {
+    path: '',
+    fullPath: '',
+    params: {},
+    query: {}
+  }
 }
 
-export const resetPageContext = () => {
-  context.page = {}
+export const resetPageContext = (): void => {
+  context.page = { rowData: {}, info: {} }
 }
+
+export const resetGlobalContext = (): void => {
+  context.global = {}
+}
+
+export const useRouteContext = () => context.route
 
 export default context

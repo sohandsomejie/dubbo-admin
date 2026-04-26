@@ -78,7 +78,7 @@ export class SearchDomain {
     this.handleResult = handleResult
   }
 
-  async onSearch(handleResult?: Function) {
+  async onSearch(handleResult?: Function, onSuccess?: Function) {
     if (handleResult) {
       this.handleResult = handleResult
     }
@@ -105,6 +105,10 @@ export class SearchDomain {
 
         if (!this.noPaged) {
           this.paged.total = pageInfo?.total || 0
+        }
+
+        if (onSuccess) {
+          onSuccess(list)
         }
       })
       .catch((error: any) => {

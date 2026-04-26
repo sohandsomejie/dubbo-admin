@@ -221,6 +221,7 @@ import {
   serviceGenericInvokeAPI
 } from '@/api/service/service'
 import { useMeshStore } from '@/stores/mesh'
+import { buildServiceDebugInfo } from '@/context/infohandle/services'
 
 defineOptions({
   name: 'ServiceDebugTab'
@@ -623,6 +624,10 @@ async function loadPageData() {
   }
   try {
     await Promise.all([loadProviderInstances(), loadMethods()])
+    buildServiceDebugInfo(serviceName.value, {
+      methods: methodList.value,
+      instances: providerInstances.value
+    })
   } catch (error) {
     console.error('load debug page data failed', error)
   }

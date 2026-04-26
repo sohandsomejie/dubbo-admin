@@ -60,6 +60,7 @@ import { Icon } from '@iconify/vue'
 import router from '@/router'
 import { PRIMARY_COLOR } from '@/base/constants'
 import { useRoute } from 'vue-router'
+import { buildApplicationsListInfo } from '@/context/infohandle/applications'
 
 let route = useRoute()
 let query = route.query['query']
@@ -118,18 +119,21 @@ const searchDomain = reactive(
 )
 
 onMounted(() => {
-  searchDomain.onSearch()
   searchDomain.tableStyle = {
     scrollX: '100',
     scrollY: '367px'
   }
+  searchDomain.onSearch(undefined, (data: any) => {
+    buildApplicationsListInfo(data)
+  })
 })
 
 provide(PROVIDE_INJECT_KEY.SEARCH_DOMAIN, searchDomain)
-watch(route, (a, b) => {
+watch(route, (a) => {
   searchDomain.queryForm['keywords'] = a.query['query']
-  searchDomain.onSearch()
-  console.log(a)
+  searchDomain.onSearch(undefined, (data: any) => {
+    buildApplicationsListInfo(data)
+  })
 })
 </script>
 <style lang="less" scoped>

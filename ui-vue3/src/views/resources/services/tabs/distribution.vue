@@ -61,6 +61,7 @@ import { Icon } from '@iconify/vue'
 import SearchTable from '@/components/SearchTable.vue'
 import { SearchDomain } from '@/utils/SearchUtil'
 import { PROVIDE_INJECT_KEY } from '@/base/enums/ProvideInject'
+import { buildServiceDistributionInfo } from '@/context/infohandle/services'
 
 let __null = PRIMARY_COLOR
 const router = useRouter()
@@ -121,7 +122,9 @@ const searchDomain = reactive(
   )
 )
 
-searchDomain.onSearch()
+searchDomain.onSearch(undefined, (data: any) => {
+  buildServiceDistributionInfo(data)
+})
 searchDomain.tableStyle = {
   scrollX: '100',
   scrollY: '367px'

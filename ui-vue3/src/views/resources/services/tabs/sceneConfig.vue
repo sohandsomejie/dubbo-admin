@@ -98,6 +98,7 @@ import {
 } from '@/api/service/service'
 import { useRoute } from 'vue-router'
 import { HTTP_STATUS } from '@/base/http/constants'
+import { buildServiceSceneConfigInfo } from '@/context/infohandle/services'
 
 const route = useRoute()
 
@@ -357,12 +358,23 @@ watch(
     if (currentKey) {
       loadConfigData(currentKey)
     }
+    const config = {
+      serviceName: route.params.pathId as string,
+      timeout: options.list.find((item: any) => item.key === 'timeout')?.form?.timeout,
+      retry: options.list.find((item: any) => item.key === 'retryNum')?.form?.retryNum,
+      regionPriority: options.list.find((item: any) => item.key === 'sameAreaFirst')?.form?.sameAreaFirst,
+      routes: options.list.find((item: any) => item.key === 'paramRoute')?.form?.paramRoute
+    }
+    buildServiceSceneConfigInfo(config)
   },
   { immediate: true }
 )
 
 onMounted(() => {
-  // Data loading is handled by the watch when tabs are switched
+  const config = {
+    serviceName: route.params.pathId as string
+  }
+  buildServiceSceneConfigInfo(config)
 })
 </script>
 

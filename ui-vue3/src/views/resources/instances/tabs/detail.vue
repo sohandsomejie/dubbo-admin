@@ -245,6 +245,7 @@ import { INSTANCE_DEPLOY_COLOR, PRIMARY_COLOR, PRIMARY_COLOR_T } from '@/base/co
 import { getInstanceDetail } from '@/api/service/instance'
 import { useRoute, useRouter } from 'vue-router'
 import { formattedDate } from '@/utils/DateUtil'
+import { buildInstanceDetailInfo } from '@/context/infohandle/instances'
 
 const route = useRoute()
 const router = useRouter()
@@ -268,7 +269,9 @@ onMounted(async () => {
     instanceIP: pathId
   }
   apiData.detail = await getInstanceDetail(params)
-  Object.assign(instanceDetail, apiData.detail.data)
+  const detailData = apiData.detail.data
+  Object.assign(instanceDetail, detailData)
+  buildInstanceDetailInfo(detailData)
 })
 
 // Click on the application name to view the application

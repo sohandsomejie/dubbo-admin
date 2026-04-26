@@ -99,6 +99,7 @@ import { isNumber } from 'lodash'
 import { bytesToHuman } from '@/utils/ByteUtil'
 import { promQueryList } from '@/utils/PromQueryUtil'
 import { useRoute } from 'vue-router'
+import { buildInstancesListInfo } from '@/context/infohandle/instances'
 let route = useRoute()
 let query = route.query['query']
 let __null = PRIMARY_COLOR
@@ -213,14 +214,17 @@ onMounted(() => {
     scrollX: '100',
     scrollY: '367px'
   }
-  searchDomain.onSearch()
+  searchDomain.onSearch(undefined, (data: any) => {
+    buildInstancesListInfo(data)
+  })
 })
 
 provide(PROVIDE_INJECT_KEY.SEARCH_DOMAIN, searchDomain)
-watch(route, (a, b) => {
+watch(route, (a) => {
   searchDomain.queryForm['keywords'] = a.query['query']
-  searchDomain.onSearch()
-  console.log(a)
+  searchDomain.onSearch(undefined, (data: any) => {
+    buildInstancesListInfo(data)
+  })
 })
 </script>
 <style lang="less" scoped>

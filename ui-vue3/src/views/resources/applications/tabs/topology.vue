@@ -49,9 +49,11 @@ import { getApplicationDetail, getApplicationGraph } from '@/api/service/app'
 import { HTTP_STATUS } from '@/base/http/constants'
 import { computed, defineComponent, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import type { PropType } from 'vue'
+import { VueNode } from 'g6-extension-vue'
+
 import { useRoute } from 'vue-router'
 import { ExtensionCategory, register, Graph, NodeEvent } from '@antv/g6'
-import { VueNode } from 'g6-extension-vue'
+import { buildApplicationTopologyInfo } from '@/context/infohandle/applications'
 
 const route = useRoute()
 
@@ -283,15 +285,14 @@ const renderTopology = (graphData: any) => {
 let resizeHandler: (() => void) | null = null
 onMounted(async () => {
   try {
-    // Fetch application graph by route param and render with force layout
     const appName = String(route.params?.pathId ?? '')
     const res = await getApplicationGraph(appName)
     if (res?.code !== HTTP_STATUS.SUCCESS) return
 
     const graphData = buildGraphData(res?.data)
     renderTopology(graphData)
+    buildApplicationTopologyInfo(appName, graphData)
 
-    // Resize canvas on window resize (keep container width responsive)
     resizeHandler = () => {
       const root = document.getElementById('topology')
       if (!root || !graphRef.value) return

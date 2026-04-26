@@ -86,12 +86,13 @@ import SearchTable from '@/components/SearchTable.vue'
 import { SearchDomain } from '@/utils/SearchUtil'
 import { PROVIDE_INJECT_KEY } from '@/base/enums/ProvideInject'
 import { useRoute, useRouter } from 'vue-router'
-import { getApplicationInstanceInfo } from '@/api/service/app'
+import { getApplicationInstanceInfo, getApplicationInstanceStatistics } from '@/api/service/app'
 import { formattedDate } from '@/utils/DateUtil'
 import { queryMetrics } from '@/base/http/promQuery'
 import { isNumber } from 'lodash'
 import { bytesToHuman } from '@/utils/ByteUtil'
 import { promQueryList } from '@/utils/PromQueryUtil'
+import { buildApplicationInstanceInfo } from '@/context/infohandle/applications'
 
 const route = useRoute()
 const router = useRouter()
@@ -104,26 +105,35 @@ let statisticsInfo = reactive({
 let appNameParam: any = route.params?.pathId
 
 onMounted(async () => {
-  // let statistics = (await getApplicationInstanceStatistics({})).data
-  // statisticsInfo.info = <{ [key: string]: string }>statistics
-  // statisticsInfo.report = {
-  //   providers: {
-  //     icon: 'carbon:branch',
-  //     value: statisticsInfo.info.instanceTotal
-  //   },
-  //   consumers: {
-  //     icon: 'mdi:merge',
-  //     value: statisticsInfo.info.versionTotal
-  //   },
-  //   cpu: {
-  //     icon: 'carbon:branch',
-  //     value: statisticsInfo.info.cpuTotal
-  //   },
-  //   memory: {
-  //     icon: 'mdi:merge',
-  //     value: statisticsInfo.info.memoryTotal
-  //   }
-  // }
+  searchDomain.tableStyle = {
+    scrollX: '100',
+    scrollY: 'calc(100vh - 400px)'
+  }
+
+  let statistics = (await getApplicationInstanceStatistics({ appName: appNameParam })).data
+  statisticsInfo.info = statistics
+  statisticsInfo.report = {
+    providers: {
+      icon: 'carbon:branch',
+      value: statisticsInfo.info.instanceTotal
+    },
+    consumers: {
+      icon: 'mdi:merge',
+      value: statisticsInfo.info.versionTotal
+    },
+    cpu: {
+      icon: 'carbon:branch',
+      value: statisticsInfo.info.cpuTotal
+    },
+    memory: {
+      icon: 'mdi:merge',
+      value: statisticsInfo.info.memoryTotal
+    }
+  }
+
+  searchDomain.onSearch(undefined, (instances: any[]) => {
+    buildApplicationInstanceInfo(statistics, instances)
+  })
 })
 
 const columns = [

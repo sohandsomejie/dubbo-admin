@@ -15,19 +15,7 @@
  * limitations under the License.
  */
 
-import Cookies from 'js-cookie'
-import { setGlobalContext } from '@/context'
-import { LOCAL_STORAGE_LOCALE } from '@/base/constants'
-
-export const syncAuthContext = (): void => {
-  const authState = JSON.parse(Cookies.get('auth-state') || '{}')
-  const username = authState?.userinfo?.username
-  if (username) {
-    setGlobalContext('user', { username: String(username) })
-  }
-}
-
-export const syncI18nContext = (): void => {
-  const locale = (localStorage.getItem(LOCAL_STORAGE_LOCALE) || 'cn') as 'en' | 'cn'
-  setGlobalContext('i18n', { locale })
-}
+export * from './home'
+export * from './applications'
+export * from './instances'
+export * from './services'

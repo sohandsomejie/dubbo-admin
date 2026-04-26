@@ -90,6 +90,7 @@ import useClipboard from 'vue-clipboard3'
 import { message } from 'ant-design-vue'
 import type { ComponentInternalInstance } from 'vue'
 import { useRoute } from 'vue-router'
+import { buildApplicationDetailInfo } from '@/context/infohandle/applications'
 
 const route = useRoute()
 
@@ -113,7 +114,9 @@ let detailMap = reactive({
 onMounted(async () => {
   let appNameParam: any = route.params?.pathId
   apiData.detail = await getApplicationDetail(appNameParam)
-  console.log(apiData.detail)
+  let detailData = apiData.detail.data
+  buildApplicationDetailInfo(detailData)
+
   let {
     appName,
     rpcProtocols,
@@ -126,7 +129,7 @@ onMounted(async () => {
     deployClusters,
     registerClusters,
     registerModes
-  } = apiData.detail.data
+  } = detailData
   detailMap.left = {
     appName,
     appTypes,
@@ -144,7 +147,6 @@ onMounted(async () => {
     registerClusters,
     registerModes
   }
-  console.log(appName)
 })
 const toClipboard = useClipboard().toClipboard
 

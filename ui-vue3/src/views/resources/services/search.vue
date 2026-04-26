@@ -47,6 +47,7 @@ import { PRIMARY_COLOR } from '@/base/constants'
 import { Icon } from '@iconify/vue'
 import { queryMetrics } from '@/base/http/promQuery'
 import { promQueryList } from '@/utils/PromQueryUtil'
+import { buildServicesListInfo } from '@/context/infohandle/services'
 
 let __null = PRIMARY_COLOR
 const router = useRouter()
@@ -146,7 +147,9 @@ const searchDomain = reactive(
   )
 )
 
-searchDomain.onSearch()
+searchDomain.onSearch(undefined, (data: any) => {
+  buildServicesListInfo(data)
+})
 searchDomain.tableStyle = {
   scrollX: '100',
   scrollY: '367px'
@@ -160,10 +163,11 @@ const viewDistribution = (serviceName: string, group: string, version: string) =
 }
 
 provide(PROVIDE_INJECT_KEY.SEARCH_DOMAIN, searchDomain)
-watch(route, (a, b) => {
+watch(route, (a) => {
   searchDomain.queryForm['keywords'] = a.query['query']
-  searchDomain.onSearch()
-  console.log(a)
+  searchDomain.onSearch(undefined, (data: any) => {
+    buildServicesListInfo(data)
+  })
 })
 </script>
 <style lang="less" scoped>

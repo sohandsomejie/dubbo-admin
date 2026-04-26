@@ -23,12 +23,18 @@
 <script setup lang="ts">
 import GrafanaPage from '@/components/GrafanaPage'
 import { getApplicationMetricsDashboard } from '@/api/service/app'
-import { provide, reactive } from 'vue'
+import { provide, reactive, onMounted } from 'vue'
 import { PROVIDE_INJECT_KEY } from '@/base/enums/ProvideInject'
 import { useRoute } from 'vue-router'
 import type { GrafanaState } from '@/types/grafana'
+import { buildApplicationMonitorInfo } from '@/context/infohandle/applications'
 
 const route = useRoute()
+const appName = route.params.pathId as string
+
+onMounted(() => {
+  buildApplicationMonitorInfo(appName)
+})
 
 // 参数验证
 if (!route.params?.pathId) {

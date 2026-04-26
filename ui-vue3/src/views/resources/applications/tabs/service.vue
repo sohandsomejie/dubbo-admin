@@ -58,6 +58,7 @@ import { queryMetrics } from '@/base/http/promQuery'
 import { promQueryList } from '@/utils/PromQueryUtil'
 import { isNumber } from 'lodash'
 import { bytesToHuman } from '@/utils/ByteUtil'
+import { buildApplicationServiceInfo } from '@/context/infohandle/applications'
 
 const route = useRoute()
 const router = useRouter()
@@ -91,6 +92,10 @@ onMounted(async () => {
       value: clusterInfo.info.consumers
     }
   }
+
+  searchDomain.onSearch(undefined, (data: any[]) => {
+    buildApplicationServiceInfo(data.length, data)
+  })
 })
 
 const columns = [
